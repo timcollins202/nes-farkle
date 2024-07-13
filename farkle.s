@@ -3,7 +3,7 @@
 ;*****************************************************************
 
 ;*****************************************************************
-; Define NES cartridge Header
+; Define NES cartridge header
 ;*****************************************************************
 .segment "HEADER"
 INES_MAPPER = 0 ; 0 = NROM
@@ -17,9 +17,17 @@ INES_SRAM   = 0 ; 1 = battery backed SRAM at $6000-7FFF
 .byte (INES_MAPPER & %11110000)
 .byte $0, $0, $0, $0, $0, $0, $0, $0 ; padding
 
+
+;*****************************************************************
+; Include CHR file
+;*****************************************************************
 .segment "TILES"
 .incbin "farkle.chr"
 
+
+;*****************************************************************
+; Define vectors
+;*****************************************************************
 .segment "VECTORS"
 .word nmi
 .word reset
@@ -288,6 +296,7 @@ loop:
     CPX #2          ;run the above loop 2 times
     BNE loop
 
+    ;TODO set attributes here
 
     JSR ppu_update  ;wait til screen has been drawn
     RTS
