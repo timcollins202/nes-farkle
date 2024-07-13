@@ -18,7 +18,7 @@ INES_SRAM   = 0 ; 1 = battery backed SRAM at $6000-7FFF
 .byte $0, $0, $0, $0, $0, $0, $0, $0 ; padding
 
 .segment "TILES"
-.incbin "megablast.chr"
+.incbin "farkle.chr"
 
 .segment "VECTORS"
 .word nmi
@@ -199,10 +199,24 @@ paletteloop:
 titleloop:
     JSR gamepad_poll
     LDA gamepad
-    AND #PAD_START     ;check whether any of these buttons are pressed
+    AND #PAD_START     ;check whether start is pressed
     BEQ titleloop
 
+    ;setup stuff before mainloop goes here
+    JSR disaplay_game_screen
+
+mainloop:
+    LDA time
+    CMP lasttime        ;make sure time has actually changed
+    BEQ mainloop
+    STA lasttime        ;time has changed, so update lasttime
+
+    ;loop calls go here
+
+    JMP mainloop
 .endproc
+
+
 ;*****************************************************************
 ; Display Title Screen
 ;*****************************************************************
@@ -250,13 +264,50 @@ loop:
     RTS
 .endproc
 
+
+;*****************************************************************
+; Display Main Game Screen
+;*****************************************************************
+.segment "CODE"
+.proc disaplay_game_screen
+    JSR ppu_off
+    JSR clear_nametable
+
+    ;draw 2 lines of background tile across top of screen
+    vram_set_address (NAME_TABLE_0_ADDRESS)
+    LDX #0
+    LDY #0
+loop:
+    LDA #$04        ;tile number of blue backdrop tile
+    STA PPU_DATA
+    INY
+    CPY #32
+    BNE loop
+    INX
+    LDY #0
+    CPX #2          ;run the above loop 2 times
+    BNE loop
+
+
+    JSR ppu_update  ;wait til screen has been drawn
+    RTS
+.endproc
+
+
 .segment "RODATA"
 default_palette:
-    .byte $0F,$15,$26,$37 
-    .byte $0F,$19,$29,$39 
-    .byte $0F,$11,$21,$31
-    .byte $0F,$00,$10,$30
-    .byte $0F,$28,$21,$11
+    ;background
+    .byte $0f,$00,$10,$30   
+    .byte $0f,$11,$21,$32
+    .byte $0f,$05,$16,$27
+    .byte $0f,$0b,$1a,$29
+
+    ;sprites
+    .byte $0F,$28,$21,$11   
     .byte $0F,$14,$24,$34
     .byte $0F,$1B,$2B,$3B
     .byte $0F,$12,$22,$32
+
+
+
+
