@@ -1,0 +1,8 @@
+
+*.o
+
+*.dbg
+
+farkle.map.txt
+
+farkle.labels.txt
