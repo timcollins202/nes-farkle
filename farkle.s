@@ -1,5 +1,5 @@
 ;*****************************************************************
-; FARKLE - An NES Dice Game
+; FARKLE - A Dice Game for NES
 ;*****************************************************************
 
 ;*****************************************************************
@@ -40,10 +40,12 @@ INES_SRAM   = 0 ; 1 = battery backed SRAM at $6000-7FFF
 .segment "ZEROPAGE"
 time:           .res 2  ;time tick counter
 lasttime:       .res 1  ;what time was last time it wsa checked
-temp:           .res 10
+temp:           .res 10 ;general purpose temp space
 score:          .res 3  ;player's current score
-update:         .res 1  ;0 = score, 1 = highscore
-highscore:      .res 3
+highscore:      .res 3  
+update:         .res 1  ;each byte denotes something needs to update:
+                        ;;0 = score, 1 = highscore
+
 
 .segment "OAM"
 oam: .res 256       ;OAM sprite data
@@ -210,8 +212,20 @@ titleloop:
     AND #PAD_START     ;check whether start is pressed
     BEQ titleloop
 
+    ;set our random seed based on the time counter since the title screen was displayed
+    LDA time
+    STA SEED0
+    LDA time + 1
+    STA SEED0 + 1
+    JSR randomize
+    SBC time + 1
+    STA SEED2
+    JSR randomize
+    SBC time
+    STA SEED2+1
+
     ;setup stuff before mainloop goes here
-    JSR disaplay_game_screen
+    JSR display_game_screen
 
 mainloop:
     LDA time
@@ -276,25 +290,64 @@ loop:
 ;*****************************************************************
 ; Display Main Game Screen
 ;*****************************************************************
+
 .segment "CODE"
-.proc disaplay_game_screen
+.proc display_game_screen
     JSR ppu_off
     JSR clear_nametable
 
-    ;draw 2 lines of background tile across top of screen
-    vram_set_address (NAME_TABLE_0_ADDRESS)
-    LDX #0
-    LDY #0
-loop:
-    LDA #$04        ;tile number of blue backdrop tile
-    STA PPU_DATA
-    INY
-    CPY #32
-    BNE loop
-    INX
-    LDY #0
-    CPX #2          ;run the above loop 2 times
-    BNE loop
+    ;draw corner box to hold dice sprites
+    ;draw top of the box
+    vram_set_address(NAME_TABLE_0_ADDRESS + 4 * 5)
+    LDX #$01            ;tile number of top left box corner
+    STX PPU_DATA
+    INX                 ;next tile is horizontal side
+    STX PPU_DATA
+    STX PPU_DATA
+    INX                 ;next tile is top right corner
+    STX PPU_DATA
+
+    ;TODO this part is broke.  FIX IT!
+;     ;draw vertical box sides
+;     vram_set_address(NAME_TABLE_0_ADDRESS + 4 * 6)
+;     LDY #0              ;iterator
+;     LDA #$06            ;tile number of vertical side
+;     STA PPU_DATA
+; @loop:
+;     CLC
+;     ADC #5              ;skip 5 pixels
+;     STA PPU_DATA
+;     CLC
+;     ADC #25             ;skip to the next line
+;     STA PPU_DATA
+;     CPY #11             ;do this 11 times
+;     BNE @loop
+
+    ;draw bottom of box
+    vram_set_address(NAME_TABLE_0_ADDRESS + 4 * 6)
+    LDX #$04            ;tile number of bottom left corner
+    STX PPU_DATA
+    LDX #$02            ;tile number of horizontal side
+    STX PPU_DATA
+    STX PPU_DATA
+    LDX #$05            ;tile number of bottom right corner
+
+
+
+;     ;draw 2 lines of background tile across top of screen
+;     vram_set_address (NAME_TABLE_0_ADDRESS)
+;     LDX #0
+;     LDY #0
+; loop:
+;     LDA #$04        ;tile number of blue backdrop tile
+;     STA PPU_DATA
+;     INY
+;     CPY #32
+;     BNE loop
+;     INX
+;     LDY #0
+;     CPX #2          ;run the above loop 2 times
+;     BNE loop
 
     ;TODO set attributes here
 
@@ -316,6 +369,7 @@ default_palette:
     .byte $0F,$14,$24,$34
     .byte $0F,$1B,$2B,$3B
     .byte $0F,$12,$22,$32
+
 
 
 
