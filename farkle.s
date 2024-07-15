@@ -298,7 +298,7 @@ loop:
 
     ;draw corner box to hold dice sprites
     ;draw top of the box
-    vram_set_address(NAME_TABLE_0_ADDRESS + 4 * 5)
+    vram_set_address(NAME_TABLE_0_ADDRESS + $0041)
     LDX #$01            ;tile number of top left box corner
     STX PPU_DATA
     INX                 ;next tile is horizontal side
@@ -308,30 +308,46 @@ loop:
     STX PPU_DATA
 
     ;TODO this part is broke.  FIX IT!
-;     ;draw vertical box sides
-;     vram_set_address(NAME_TABLE_0_ADDRESS + 4 * 6)
-;     LDY #0              ;iterator
-;     LDA #$06            ;tile number of vertical side
-;     STA PPU_DATA
-; @loop:
-;     CLC
-;     ADC #5              ;skip 5 pixels
-;     STA PPU_DATA
-;     CLC
-;     ADC #25             ;skip to the next line
-;     STA PPU_DATA
-;     CPY #11             ;do this 11 times
-;     BNE @loop
+    ;draw vertical box sides
+    ; LDA #$00
+    ; STA paddr
+    ; LDA #61
+    ; STA paddr + 1
+
+    ;make a list of addresses we wll need to set and loop over them
+    LDY #0              ;iterator
+    assign_16i paddr, #$0061
+@loop:
+    vram_set_address(NAME_TABLE_0_ADDRESS + paddr)
+   
+    LDA #$06            ;tile number of vertical side
+    STA PPU_DATA
+    LDA #0              ;tile number of blank space
+    STA PPU_DATA            
+    STA PPU_DATA
+    STA PPU_DATA        ;3 blank tiles
+    LDA #$06            ;back to vertical side
+    STA PPU_DATA
+
+
+    CLC
+    ADC #25             ;skip to the next line
+    STA PPU_DATA
+    INY
+    CPY #11             ;do this 11 times
+    BNE @loop
 
     ;draw bottom of box
-    vram_set_address(NAME_TABLE_0_ADDRESS + 4 * 6)
+    vram_set_address(NAME_TABLE_0_ADDRESS + $01e1)
     LDX #$04            ;tile number of bottom left corner
     STX PPU_DATA
     LDX #$02            ;tile number of horizontal side
     STX PPU_DATA
     STX PPU_DATA
     LDX #$05            ;tile number of bottom right corner
+    STX PPU_DATA
 
+    
 
 
 ;     ;draw 2 lines of background tile across top of screen
