@@ -39,21 +39,22 @@ INES_SRAM   = 0 ; 1 = battery backed SRAM at $6000-7FFF
 ;*****************************************************************
 .segment "ZEROPAGE"
 time:           .res 2  ;time tick counter
-lasttime:       .res 1  ;what time was last time it wsa checked
+lasttime:       .res 1  ;what time was last time it was checked
 temp:           .res 10 ;general purpose temp space
+paddr:          .res 2  ;16-bit address pointer
 score:          .res 3  ;player's current score
 highscore:      .res 3  
-update:         .res 1  ;each byte denotes something needs to update:
-                        ;;0 = score, 1 = highscore
+update:         .res 1  ;each bit denotes something needs to update:
+                        ;0 = score, 1 = highscore
 
 
 .segment "OAM"
-oam: .res 256       ;OAM sprite data
+oam: .res 256           ;OAM sprite data
 
 .include "neslib.s"
 
 .segment "BSS"
-palette: .res 32    ;current palette buffer
+palette: .res 32        ;current palette buffer
 
 
 ;*****************************************************************
@@ -242,9 +243,6 @@ mainloop:
 ;*****************************************************************
 ; Display Title Screen
 ;*****************************************************************
-.segment "ZEROPAGE"
-paddr:  .res 2 ;16-bit address pointer
-
 .segment "CODE"
 title_text:
 .byte "F A R K L E",0
