@@ -29,3 +29,29 @@
     STA PPU_ADDR
 .endmacro
 
+
+;******************************************************************************
+; Adds an 8-bit value to a 16-bit value
+;******************************************************************************
+.macro add_16_8 dest, value
+
+	LDA value
+   BMI :+
+		CLC
+		ADC dest
+		STA dest
+		LDA dest+1
+		ADC #0
+		STA dest+1
+      JMP :++
+   :
+
+		CLC
+		ADC dest
+		STA dest
+		LDA dest+1
+		ADC #$FF
+		STA dest+1
+   :
+
+.endmacro

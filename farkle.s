@@ -314,12 +314,13 @@ loop:
     ; LDA #61
     ; STA paddr + 1
 
-    ;make a list of addresses we wll need to set and loop over them
+    ;start at nametable offset $0061
+    ;use paddr to contain offset
+    ;--add $1B to go to 1st side's position, next line
+    assign_16i paddr, $0061
     LDY #0              ;iterator
-    assign_16i paddr, #$0061
-@loop:
     vram_set_address(NAME_TABLE_0_ADDRESS + paddr)
-   
+@loop:   
     LDA #$06            ;tile number of vertical side
     STA PPU_DATA
     LDA #0              ;tile number of blank space
@@ -328,11 +329,8 @@ loop:
     STA PPU_DATA        ;3 blank tiles
     LDA #$06            ;back to vertical side
     STA PPU_DATA
-
-
-    CLC
-    ADC #25             ;skip to the next line
-    STA PPU_DATA
+    add_16_8 paddr, $1B ;move address pointer to the next line
+    vram_set_address(NAME_TABLE_0_ADDRESS + paddr)
     INY
     CPY #11             ;do this 11 times
     BNE @loop
