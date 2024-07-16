@@ -22,7 +22,7 @@ INES_SRAM   = 0 ; 1 = battery backed SRAM at $6000-7FFF
 ; Include CHR file
 ;*****************************************************************
 .segment "TILES"
-.incbin "farkleOLD.chr"
+.incbin "farkle.chr"
 
 
 ;*****************************************************************
@@ -296,7 +296,7 @@ loop:
     JSR ppu_off
     JSR clear_nametable
 
-    vram_set_address $2000
+    vram_set_address NAME_TABLE_0_ADDRESS
     LDY #0          ;iterator low byte
 loop1:
     LDA playfield_tiles1, y 
@@ -307,7 +307,6 @@ loop1:
     STA PPU_DATA    ;get that last tile in there
     INY             ;roll Y over
 loop2:
-    ;vram_set_address $20ff
     LDA playfield_tiles2, y 
     STA PPU_DATA
     INY
@@ -316,15 +315,14 @@ loop2:
     STA PPU_DATA    ;get that last tile in there
     INY             ;roll Y over
 loop3:
-    ;vram_set_address $21fe
     LDA playfield_tiles3, y 
     STA PPU_DATA
     INY
     CPY #255
     BNE loop3
-    STA PPU_DATA
-    INY
-loop4:
+    STA PPU_DATA    ;get that last tile in there
+    INY             ;roll Y over
+    loop4:
     LDA playfield_tiles4, y 
     STA PPU_DATA
     INY
