@@ -85,7 +85,8 @@ ppu_ctl1:		.res 1 ; PPU Control Register 2 Value
 .endproc
 
 ;*****************************************************************
-; ppu_update: waits until next NMI, turns rendering on (if not already), uploads OAM, palette, and nametable update to PPU
+; ppu_update: waits until next NMI, turns rendering on (if not already), 
+; uploads OAM, palette, and nametable update to PPU
 ;*****************************************************************
 .segment "CODE"
 
@@ -102,7 +103,8 @@ ppu_ctl1:		.res 1 ; PPU Control Register 2 Value
 .endproc
 
 ;*****************************************************************
-; ppu_off: waits until next NMI, turns rendering off (now safe to write PPU directly via PPU_DATA)
+; ppu_off: waits until next NMI, turns rendering off 
+; (now safe to write PPU directly via PPU_DATA)
 ;*****************************************************************
 .segment "CODE"
 

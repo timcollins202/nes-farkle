@@ -8,6 +8,21 @@
     STA dest + 1
 .endmacro
 
+
+;******************************************************************************
+; Set the vram address pointer to the address specified by the pointer
+;******************************************************************************
+.macro vram_set_address_i addresspointer
+
+    lda PPU_STATUS
+	lda addresspointer + 1
+	sta PPU_ADDR
+	lda addresspointer + 0
+	sta PPU_ADDR
+
+.endmacro
+
+
 ;******************************************************************************
 ; Set the vram address pointer to the specified address
 ;******************************************************************************
@@ -36,22 +51,22 @@
 .macro add_16_8 dest, value
 
 	LDA value
-   BMI :+
+    BMI :+
 		CLC
 		ADC dest
 		STA dest
-		LDA dest+1
+		LDA dest + 1
 		ADC #0
-		STA dest+1
-      JMP :++
-   :
+		STA dest + 1
+        JMP :++
+    :
 
-		CLC
-		ADC dest
-		STA dest
-		LDA dest+1
-		ADC #$FF
-		STA dest+1
-   :
+	CLC
+	ADC dest
+	STA dest
+	LDA dest + 1
+	ADC #$FF
+	STA dest + 1
+    :
 
 .endmacro
