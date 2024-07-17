@@ -42,8 +42,8 @@ time:           .res 2  ;time tick counter
 lasttime:       .res 1  ;what time was last time it was checked
 temp:           .res 10 ;general purpose temp space
 paddr:          .res 2  ;16-bit address pointer
-score:          .res 3  ;player's current score
-highscore:      .res 3  
+score:          .res 3  ;current score
+highscore:      .res 3  ;high score
 update:         .res 1  ;each bit denotes something needs to update:
                         ;0 = score, 1 = highscore
 
@@ -227,6 +227,7 @@ titleloop:
 
     ;setup stuff before mainloop goes here
     JSR display_game_screen
+    JSR write_score_line
 
 mainloop:
     LDA time
@@ -326,9 +327,26 @@ loop3:
     INY
     CPY #255
     BNE loop4
-    STA PPU_DATA
-   
+    STA PPU_DATA 
+
     JSR ppu_update  ;wait til screen has been drawn
+    RTS
+.endproc
+
+;this does not compile and I have no idea why
+.proc write_score_line
+    ;write the score to the screen
+score_text:
+    .byte "SCORE 0000000"
+
+    assign_16_i paddr, score_text
+    LDY #0
+loop:
+    LDA (paddr), y 
+    STA PPU_DATA
+    INY
+    CPY #13
+    BNE loop
     RTS
 .endproc
 

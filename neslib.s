@@ -193,7 +193,7 @@ loop:
 ; PPU address has been set
 ;*****************************************************************
 .segment "ZEROPAGE"
-text_address:       .res 1 ;set to the address of the text to write
+text_address:       .res 2 ;set to the address of the text to write
 
 .segment "CODE"
 .proc write_text
@@ -201,7 +201,7 @@ text_address:       .res 1 ;set to the address of the text to write
 loop:
     LDA (text_address), y ;get the byte at the current source address
     BEQ exit              ;exit when we encounter a zero in the text
-    STA PPU_DATA       ;write the byte to VRAM
+    STA PPU_DATA          ;write the byte to VRAM
     INY
     JMP loop
 exit:
