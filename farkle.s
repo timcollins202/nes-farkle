@@ -22,7 +22,8 @@ INES_SRAM   = 0 ; 1 = battery backed SRAM at $6000-7FFF
 ; Include CHR file
 ;*****************************************************************
 .segment "TILES"
-.incbin "farkle.chr"
+.incbin "farkle-bg.chr"
+.incbin "farkle-sp.chr"
 
 
 ;*****************************************************************
@@ -35,7 +36,7 @@ INES_SRAM   = 0 ; 1 = battery backed SRAM at $6000-7FFF
 
 
 ;*****************************************************************
-; Define variables
+; Reserve memory for variables
 ;*****************************************************************
 .segment "ZEROPAGE"
 time:           .res 2  ;time tick counter
@@ -227,6 +228,7 @@ titleloop:
 
     ;setup stuff before mainloop goes here
     JSR display_game_screen
+    JSR draw_selector
 
 mainloop:
     LDA time
@@ -288,7 +290,6 @@ loop:
 ;*****************************************************************
 ; Display Main Game Screen
 ;*****************************************************************
-
 .segment "CODE"
 .proc display_game_screen
     JSR ppu_off
@@ -332,6 +333,47 @@ loop3:
     RTS
 .endproc
 
+
+;*****************************************************************
+; Put player's selector sprite on screen
+;*****************************************************************
+.segment "CODE"
+.proc draw_selector
+    ;display the player's selctor in the top left square
+    ;set Y position of all 4 parts of the selector (byte 0)
+    LDA #24         ;Y position of 24 for top 2
+    STA oam
+    STA oam + 4     
+    LDA #32         ;Y position of 32 for bottom 2
+    STA oam + 8
+    STA oam + 12
+    ;set the tile number used by the sprite (byte 1)
+    LDA #$01        ;all 4 corners use the same tile, just rotated
+    STA oam + 1
+    STA oam + 5
+    STA oam + 9
+    STA oam + 13
+    ;set sprite attributes (byte 2)
+    LDA #%00000000  ;no attributes for top left corner
+    STA oam + 2
+    LDA #SPRITE_FLIP_HORIZ|SPRITE_PALETTE_1
+    STA oam + 6
+    LDA #SPRITE_FLIP_VERT|SPRITE_PALETTE_1
+    STA oam + 10
+    LDA #SPRITE_FLIP_HORIZ|SPRITE_FLIP_VERT|SPRITE_PALETTE_1
+    STA oam + 14
+    ;set the X position for all 4 parts of the selector (byte 3)
+    LDA #24
+    STA oam + 3
+    STA oam + 11
+    LDA #32
+    STA oam + 7
+    STA oam + 15
+
+    RTS
+.endproc
+
+
 .segment "RODATA"
 default_palette:
     ;background
@@ -341,7 +383,7 @@ default_palette:
     .byte $0f,$0b,$1a,$29
 
     ;sprites
-    .byte $0F,$28,$21,$11   
+    .byte $0F,$05,$15,$17   
     .byte $0F,$14,$24,$34
     .byte $0F,$1B,$2B,$3B
     .byte $0F,$12,$22,$32

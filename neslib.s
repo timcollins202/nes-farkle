@@ -8,9 +8,9 @@ PPU_MASK = $2001            ; PPU Control Register 2 (Write)
 PPU_STATUS = $2002          ; PPU Status Register (Read)
 PPU_SPRRAM_ADDRESS = $2003  ; PPU SPR-RAM Address Register (Write)
 PPU_SPRRAM_IO = $2004       ; PPU SPR-RAM I/O Register (Write)
-PPU_SCROLL = $2005   ; PPU VRAM Address Register 1 (Write)
-PPU_ADDR = $2006   ; PPU VRAM Address Register 2 (Write)
-PPU_DATA = $2007         ; VRAM I/O Register (Read/Write)
+PPU_SCROLL = $2005          ; PPU VRAM Address Register 1 (Write)
+PPU_ADDR = $2006            ; PPU VRAM Address Register 2 (Write)
+PPU_DATA = $2007            ; VRAM I/O Register (Read/Write)
 SPRITE_DMA = $4014          ; Sprite DMA Register
 
 ; Define PPU control register masks
@@ -61,6 +61,14 @@ NAME_TABLE_0_ADDRESS		= $2000
 ATTRIBUTE_TABLE_0_ADDRESS	= $23C0
 NAME_TABLE_1_ADDRESS		= $2400
 ATTRIBUTE_TABLE_1_ADDRESS	= $27C0
+
+; Sprite attribute values
+SPRITE_FLIP_VERT        = $80
+SPRITE_FLIP_HORIZ       = $40
+SPRITE_PALETTE_0        = $00
+SPRITE_PALETTE_1        = $01
+SPRITE_PALETTE_2        = $02
+SPRITE_PALETTE_3        = $03
 
 .segment "ZEROPAGE"
 
