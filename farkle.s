@@ -296,9 +296,17 @@ loop:
 ; Display Main Game Screen
 ;*****************************************************************
 .segment "CODE"
+score_text:
+    .byte "SCORE 0000000",0
+
 .proc display_game_screen
     JSR ppu_off
     JSR clear_nametable
+
+    ;write score at top of screen
+    vram_set_address (NAME_TABLE_0_ADDRESS + 2 * 32 + 9)
+    assign_16i text_address, score_text
+    JSR write_text
 
     ;draw tiles from starting_dice_tiles
     vram_set_address (NAME_TABLE_0_ADDRESS + 7 * 32 + 1)
@@ -309,8 +317,6 @@ loop:
     INY
     CPY #128
     BNE @loop
-
-
 
     JSR ppu_update  ;wait til screen has been drawn
     RTS
@@ -367,7 +373,7 @@ loop:
     LDA gamepad
     CMP gamepad_last                ;make sure button state has changed
     BNE :+
-        JMP player_actions_done     ;if not, bail out of player_actions
+        RTS                         ;if not, GTFO
     :                       
     AND #PAD_R
     BEQ not_pressing_right
@@ -415,13 +421,15 @@ not_pressing_right:
             LDA SELECTOR_4_XPOS
             SEC
             SBC #40
-            STA SELECTOR_4_XPOS            
+            STA SELECTOR_4_XPOS
 
 not_pressing_left:
 
-player_actions_done:
     RTS
 .endproc
+
+
+
 
 
 .segment "RODATA"
@@ -439,10 +447,15 @@ default_palette:
     .byte $0F,$12,$22,$32
 
 starting_dice_tiles:
-	.byte $00,$0b,$0c,$0c,$0d,$00,$0b,$0c,$0c,$0d,$00,$0b,$0c,$0c,$0d,$00,$0b,$0c,$0c,$0d,$00,$0b,$0c,$0c,$0d,$00,$0b,$0c,$0c,$0d,$00,$00
-	.byte $00,$0e,$13,$14,$0f,$00,$0e,$13,$14,$0f,$00,$0e,$13,$14,$0f,$00,$0e,$13,$14,$0f,$00,$0e,$13,$14,$0f,$00,$0e,$13,$14,$0f,$00,$00
-	.byte $00,$0e,$15,$16,$0f,$00,$0e,$15,$16,$0f,$00,$0e,$15,$16,$0f,$00,$0e,$15,$16,$0f,$00,$0e,$15,$16,$0f,$00,$0e,$15,$16,$0f,$00,$00
-	.byte $00,$10,$12,$12,$11,$00,$10,$12,$12,$11,$00,$10,$12,$12,$11,$00,$10,$12,$12,$11,$00,$10,$12,$12,$11,$00,$10,$12,$12,$11,$00,$00
+    .byte $00,$0b,$0c,$0c,$0d,$00,$17,$18,$0c,$0d,$00,$17,$18,$0c,$0d,$00,$17,$18,$26,$25,$00,$17,$18,$26,$25,$00,$17,$18,$26,$25,$00,$00
+	.byte $00,$0e,$13,$14,$0f,$00,$19,$1a,$03,$0f,$00,$19,$1f,$21,$0f,$00,$19,$1a,$2e,$27,$00,$19,$1f,$28,$27,$00,$2b,$2a,$2d,$2c,$00,$00
+	.byte $00,$0e,$15,$16,$0f,$00,$0e,$03,$1e,$1c,$00,$0e,$2e,$1f,$1c,$00,$24,$21,$1e,$1c,$00,$24,$28,$1f,$1c,$00,$2b,$2a,$2d,$2c,$00,$00
+	.byte $00,$10,$12,$12,$11,$00,$10,$12,$1d,$1b,$00,$10,$12,$1d,$1b,$00,$22,$23,$1d,$1b,$00,$22,$23,$1d,$1b,$00,$22,$23,$1d,$1b,$00,$00
+; starting_dice_tiles:
+; 	.byte $00,$0b,$0c,$0c,$0d,$00,$0b,$0c,$0c,$0d,$00,$0b,$0c,$0c,$0d,$00,$0b,$0c,$0c,$0d,$00,$0b,$0c,$0c,$0d,$00,$0b,$0c,$0c,$0d,$00,$00
+; 	.byte $00,$0e,$13,$14,$0f,$00,$0e,$13,$14,$0f,$00,$0e,$13,$14,$0f,$00,$0e,$13,$14,$0f,$00,$0e,$13,$14,$0f,$00,$0e,$13,$14,$0f,$00,$00
+; 	.byte $00,$0e,$15,$16,$0f,$00,$0e,$15,$16,$0f,$00,$0e,$15,$16,$0f,$00,$0e,$15,$16,$0f,$00,$0e,$15,$16,$0f,$00,$0e,$15,$16,$0f,$00,$00
+; 	.byte $00,$10,$12,$12,$11,$00,$10,$12,$12,$11,$00,$10,$12,$12,$11,$00,$10,$12,$12,$11,$00,$10,$12,$12,$11,$00,$10,$12,$12,$11,$00,$00
 
 ; playfield_tiles1:
 ;     .byte $04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04
