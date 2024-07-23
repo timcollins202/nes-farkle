@@ -157,16 +157,21 @@ ppu_ctl1:		.res 1 ; PPU Control Register 2 Value
     RTS
 .endproc
 
-.segment "ZEROPAGE"
-gamepad:        .res 1 ;store the current gamepad state
 
 ;*****************************************************************
 ; gamepad_poll: this reads the gamepad state into the variable labelled "gamepad"
 ; This only reads the first gamepad, and also if DPCM samples are played they can
 ; conflict with gamepad reading, which may give incorrect results.
 ;*****************************************************************
+.segment "ZEROPAGE"
+gamepad:        .res 1 ;store the current gamepad state
+gamepad_last:   .res 1 ;the previous gamepad state 
+
 .segment "CODE"
 .proc gamepad_poll
+    ;store the previous state of gamepad
+    LDA gamepad
+    STA gamepad_last
     ;strobe the gamepad to latch current button state
     LDA #1
     STA JOYPAD1

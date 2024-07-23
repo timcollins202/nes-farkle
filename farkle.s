@@ -58,8 +58,8 @@ palette: .res 32        ;current palette buffer
 ;*****************************************************************
 ; Include external files
 ;*****************************************************************
-.include "neslib.s"
-.include "constants.inc"
+.include "neslib.s"         ;General Purpose NES Library
+.include "constants.inc"    ;Game-specific constants
 
 
 ;*****************************************************************
@@ -326,7 +326,7 @@ loop3:
     BNE loop3
     STA PPU_DATA    ;get that last tile in there
     INY             ;roll Y over
-    loop4:
+loop4:
     LDA playfield_tiles4, y 
     STA PPU_DATA
     INY
@@ -387,6 +387,10 @@ loop3:
 .proc player_actions
     JSR gamepad_poll
     LDA gamepad
+    CMP gamepad_last                ;make sure button state has changed
+    BNE :+
+        JMP player_actions_done     ;if not, bail out of player_actions
+    :                       
     AND #PAD_R
     BEQ not_pressing_right
         ;we are pressing right. Make sure we aren't already on right edge
@@ -395,23 +399,24 @@ loop3:
         BEQ not_pressing_right
         ;we are not on right edge.  Move selector to the right by a pixel (for now)
             CLC
-            ADC #1
+            ADC #64
             STA SELECTOR_1_XPOS     ;move top left sprite
             LDA SELECTOR_2_XPOS     ;get top right sprite's X position
             CLC
-            ADC #1
+            ADC #64
             STA SELECTOR_2_XPOS    ;move top right sprite
             LDA SELECTOR_3_XPOS    ;get bottom left sprite's X position
             CLC 
-            ADC #1
+            ADC #64
             STA SELECTOR_3_XPOS    ;move bottom left sprite
             LDA SELECTOR_4_XPOS    ;get bottom right sprite's X position
             CLC 
-            ADC #1
+            ADC #64
             STA SELECTOR_4_XPOS    ;move bottom right sprite
 
-
 not_pressing_right:
+
+player_actions_done:
     RTS
 .endproc
 
