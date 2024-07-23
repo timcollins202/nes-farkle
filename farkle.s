@@ -52,10 +52,14 @@ update:         .res 1  ;each bit denotes something needs to update:
 .segment "OAM"
 oam: .res 256           ;OAM sprite data
 
-.include "neslib.s"
-
 .segment "BSS"
 palette: .res 32        ;current palette buffer
+
+;*****************************************************************
+; Include external files
+;*****************************************************************
+.include "neslib.s"
+.include "constants.inc"
 
 
 ;*****************************************************************
@@ -237,6 +241,7 @@ mainloop:
     STA lasttime        ;time has changed, so update lasttime
 
     ;loop calls go here
+    JSR player_actions
 
     JMP mainloop
 .endproc
@@ -296,7 +301,7 @@ loop:
     JSR clear_nametable
 
     vram_set_address NAME_TABLE_0_ADDRESS
-    LDY #0          ;iterator low byte
+    LDY #0          ;iterator
 loop1:
     LDA playfield_tiles1, y 
     STA PPU_DATA
@@ -341,35 +346,72 @@ loop3:
 .proc draw_selector
     ;display the player's selctor in the top left square
     ;set Y position of all 4 parts of the selector (byte 0)
-    LDA #32         ;Y position of 24 for top 2
-    STA oam
-    STA oam + 4     
-    LDA #40         ;Y position of 32 for bottom 2
-    STA oam + 8
-    STA oam + 12
+    LDA #32                 ;Y position of 24 for top 2
+    STA SELECTOR_1_YPOS
+    STA SELECTOR_2_YPOS     
+    LDA #40                 ;Y position of 32 for bottom 2
+    STA SELECTOR_3_YPOS
+    STA SELECTOR_4_YPOS
     ;set the tile number used by the sprite (byte 1)
-    LDA #$01        ;all 4 corners use the same tile, just rotated
-    STA oam + 1
-    STA oam + 5
-    STA oam + 9
-    STA oam + 13
+    LDA #$01                ;all 4 corners use the same tile, just rotated
+    STA SELECTOR_1_TILE
+    STA SELECTOR_2_TILE
+    STA SELECTOR_3_TILE
+    STA SELECTOR_4_TILE
     ;set sprite attributes (byte 2)
     LDA #SPRITE_PALETTE_1  
-    STA oam + 2
+    STA SELECTOR_1_ATTR
     LDA #SPRITE_FLIP_HORIZ|SPRITE_PALETTE_1
-    STA oam + 6
+    STA SELECTOR_2_ATTR
     LDA #SPRITE_FLIP_VERT|SPRITE_PALETTE_1
-    STA oam + 10
+    STA SELECTOR_3_ATTR
     LDA #SPRITE_FLIP_HORIZ|SPRITE_FLIP_VERT|SPRITE_PALETTE_1
-    STA oam + 14
+    STA SELECTOR_4_ATTR
     ;set the X position for all 4 parts of the selector (byte 3)
     LDA #32
-    STA oam + 3
-    STA oam + 11
+    STA SELECTOR_1_XPOS
+    STA SELECTOR_3_XPOS
     LDA #40
-    STA oam + 7
-    STA oam + 15
+    STA SELECTOR_2_XPOS
+    STA SELECTOR_4_XPOS
 
+    RTS
+.endproc
+
+
+;*****************************************************************
+; Handle player actions
+;   -move selector
+;*****************************************************************
+.segment "CODE"
+.proc player_actions
+    JSR gamepad_poll
+    LDA gamepad
+    AND #PAD_R
+    BEQ not_pressing_right
+        ;we are pressing right. Make sure we aren't already on right edge
+        LDA SELECTOR_1_XPOS         ;get X position of top left selector sprite
+        CMP #168                    ;can't go any farther right than this
+        BEQ not_pressing_right
+        ;we are not on right edge.  Move selector to the right by a pixel (for now)
+            CLC
+            ADC #1
+            STA SELECTOR_1_XPOS     ;move top left sprite
+            LDA SELECTOR_2_XPOS     ;get top right sprite's X position
+            CLC
+            ADC #1
+            STA SELECTOR_2_XPOS    ;move top right sprite
+            LDA SELECTOR_3_XPOS    ;get bottom left sprite's X position
+            CLC 
+            ADC #1
+            STA SELECTOR_3_XPOS    ;move bottom left sprite
+            LDA SELECTOR_4_XPOS    ;get bottom right sprite's X position
+            CLC 
+            ADC #1
+            STA SELECTOR_4_XPOS    ;move bottom right sprite
+
+
+not_pressing_right:
     RTS
 .endproc
 

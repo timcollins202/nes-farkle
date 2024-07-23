@@ -1,5 +1,5 @@
 ;*****************************************************************
-; neslib.s: NES Function Library
+; neslib.s: General Purpose NES Function Library
 ;*****************************************************************
 
 ; Define PPU Registers
