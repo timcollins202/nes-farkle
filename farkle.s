@@ -341,10 +341,10 @@ loop3:
 .proc draw_selector
     ;display the player's selctor in the top left square
     ;set Y position of all 4 parts of the selector (byte 0)
-    LDA #24         ;Y position of 24 for top 2
+    LDA #32         ;Y position of 24 for top 2
     STA oam
     STA oam + 4     
-    LDA #32         ;Y position of 32 for bottom 2
+    LDA #40         ;Y position of 32 for bottom 2
     STA oam + 8
     STA oam + 12
     ;set the tile number used by the sprite (byte 1)
@@ -354,7 +354,7 @@ loop3:
     STA oam + 9
     STA oam + 13
     ;set sprite attributes (byte 2)
-    LDA #%00000000  ;no attributes for top left corner
+    LDA #SPRITE_PALETTE_1  
     STA oam + 2
     LDA #SPRITE_FLIP_HORIZ|SPRITE_PALETTE_1
     STA oam + 6
@@ -363,10 +363,10 @@ loop3:
     LDA #SPRITE_FLIP_HORIZ|SPRITE_FLIP_VERT|SPRITE_PALETTE_1
     STA oam + 14
     ;set the X position for all 4 parts of the selector (byte 3)
-    LDA #24
+    LDA #32
     STA oam + 3
     STA oam + 11
-    LDA #32
+    LDA #40
     STA oam + 7
     STA oam + 15
 
