@@ -71,7 +71,6 @@ SPRITE_PALETTE_2        = $02
 SPRITE_PALETTE_3        = $03
 
 .segment "ZEROPAGE"
-
 nmi_ready:		.res 1 ; set to 1 to push a PPU frame update, 
 					   ;        2 to turn rendering off next NMI
 ppu_ctl0:		.res 1 ; PPU Control Register 2 Value
@@ -83,7 +82,6 @@ ppu_ctl1:		.res 1 ; PPU Control Register 2 Value
 ; wait_frame: waits until the next NMI occurs
 ;*****************************************************************
 .segment "CODE"
-
 .proc wait_frame
     INC nmi_ready
 @loop:
@@ -97,7 +95,6 @@ ppu_ctl1:		.res 1 ; PPU Control Register 2 Value
 ; uploads OAM, palette, and nametable update to PPU
 ;*****************************************************************
 .segment "CODE"
-
 .proc ppu_update
     LDA ppu_ctl0
     ORA #VBLANK_NMI
@@ -115,7 +112,6 @@ ppu_ctl1:		.res 1 ; PPU Control Register 2 Value
 ; (now safe to write PPU directly via PPU_DATA)
 ;*****************************************************************
 .segment "CODE"
-
 .proc ppu_off
     JSR wait_frame
     LDA ppu_ctl0
@@ -133,7 +129,6 @@ ppu_ctl1:		.res 1 ; PPU Control Register 2 Value
 ; clear_nametable: clears the first name table
 ;*****************************************************************
 .segment "CODE"
-
 .proc clear_nametable
     LDA PPU_STATUS      ;reset address latch
     LDA #$20            ;set PPU address to $2000
@@ -171,7 +166,6 @@ gamepad:        .res 1 ;store the current gamepad state
 ; conflict with gamepad reading, which may give incorrect results.
 ;*****************************************************************
 .segment "CODE"
-
 .proc gamepad_poll
     ;strobe the gamepad to latch current button state
     LDA #1
