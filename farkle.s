@@ -449,52 +449,44 @@ not_pressing_start:
     JSR rand                ;do it again
     STA temp + 2            ;now we have enough random bytes for 6 dice
 
-    ;TODO- not sure this is working correctly, seems to only set 3 bytes of dicerolls. fix it!
-    LDY #0                  ;iterator
-    ;take 4 byte nibbles from temp and store them into dicerolls
-@loop:
-    LDA temp, y
-    PHA                         
-    LSR A                    ;rotate 4 hi bits to bottom of byte
+    ;split each byte into 2 3-byte nibbles and store them on the stack
+    ;TODO- maybe store a random value to subtract/add to 0s/7s,
+    ;   otherwise 1s and 6s are more likely than other numbers
+    LDY #0          ;iterator
+splitbytes:
+    LDA temp, y     ;get whole byte from temp
+    AND #$1f        ;get bottom 3 bytes
+    PHA             ;push them to stack
+    LDA temp, y     ;get the whole byte back
+    LSR A           ;rotate 3 hi bits to bottom of byte
     LSR A 
     LSR A 
-    LSR A 
-    STA dicerolls, y
-    PLA
-    AND #$0F
+    LSR A
+    LSR A
+    PHA             ;push 3 hi bits to stack
     INY
-    STA dicerolls, y   
+    CPY #3          ;repeat this for each byte in temp
+    BNE splitbytes
+
+    ;6 dice rolls are now on stack.  pop each, make sure it is btwn 1-6, and store to dicerolls
+    LDY #0                  ;iterator
+check_for_seven:
+    PLA                     ;pull top byte off the stack
+    CMP #7          
+    BCC check_for_zero
+    ;we have a 7. subtract 1 from it (TODO- find a better way-- this turns all 7s to 6s)
+        LDA #6
+        JMP skip
+check_for_zero:
+    CMP #1
+    BCS skip
+    ;we have a 0. add 1 to it (TODO- find a better way-- this turns all 0s into 1s)
+        LDA #1
+skip:
+    STA dicerolls, y
+    INY
     CPY #6
-    BNE @loop
-
-;     LDA temp + 1
-;     PHA                         
-;     LSR A                    ;rotate 4 hi bits to bottom of byte
-;     LSR A 
-;     LSR A 
-;     LSR A 
-;     STA dicerolls + 2
-;     PLA
-;     AND #$0F                
-;     STA dicerolls + 3
-
-;     LDA temp + 2
-;     PHA                         
-;     LSR A                    ;rotate 4 hi bits to bottom of byte
-;     LSR A 
-;     LSR A 
-;     LSR A 
-;     STA dicerolls + 4
-;     PLA
-;     AND #$0F                
-;     STA dicerolls + 5
-
-;     ;loop over dicerolls and make sure they are between 1 and 6
-;     LDY #0                    ;iterator
-; @loop:
-;     LDA dicerolls, y 
-
-
+    BNE check_for_seven
 
     RTS
 .endproc
