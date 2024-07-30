@@ -45,6 +45,8 @@ temp:           .res 10 ;general purpose temp space
 paddr:          .res 2  ;16-bit address pointer
 score:          .res 3  ;current score
 highscore:      .res 3  ;high score
+gamestate:      .res 1  ;each bit denotes a gamestate:
+                        ;0 = starting roll, 1 = rolling dice, 2 = choosing dice, etc.
 update:         .res 1  ;each bit denotes something needs to update:
                         ;0 = score, 1 = highscore
 dicerolls:      .res 6  ;outcomes of dice rolls, one die per byte
@@ -157,6 +159,12 @@ wait_vblank2:
     BCC @loop
 
     ;new graphical updating stuff goes here
+    ;check gamestate for updates
+    LDA gamestate
+    CMP #1                  ;gamestate bit 0 = rolling dice
+    BNE :+
+        JSR animate_dice
+    :
 
     ;write current scroll and control settings to PPU
     LDA #0
@@ -177,6 +185,7 @@ wait_vblank2:
     PLA
     TAX
     PLA
+
     RTI
 .endproc
 
@@ -234,6 +243,10 @@ titleloop:
     STA SEED2+1
 
     ;setup stuff before mainloop goes here
+    ;set gamestate to 0 = pre-roll
+    LDA #0
+    STA gamestate
+
     JSR display_game_screen
     JSR draw_selector
 
@@ -430,8 +443,12 @@ not_pressing_left:
     LDA gamepad
     AND #PAD_START
     BEQ not_pressing_start
-        ;we are pressing start.  Roll those bones!
-        JSR roll_dice
+        ;we are pressing start.  See if we are pre-roll
+        LDA gamestate
+        CMP #0
+        BNE not_pressing_start
+            ;we are pressing start pre-roll.  Roll em!
+            JSR roll_dice
 not_pressing_start:
 
     RTS
@@ -443,6 +460,11 @@ not_pressing_start:
 ;*****************************************************************
 .segment "CODE"
 .proc roll_dice
+    ;update gamestate
+    LDA #1                  ;gamestate bit 1 = rolling dice
+    STA gamestate
+
+    ;generate random numbers
     JSR rand                ;get next random 16 bits in A and Y
     STA temp                ;store them in temp
     STY temp + 1
@@ -451,8 +473,6 @@ not_pressing_start:
     STY temp + 3            ;get the last one for 0/7 mitigation
 
     ;split each byte into 2 3-byte nibbles and store them on the stack
-    ;TODO- maybe store a random value to subtract/add to 0s/7s,
-    ;   otherwise 1s and 6s are more likely than other numbers
     LDY #0          ;iterator
 splitbytes:
     LDA temp, y     ;get whole byte from temp
@@ -503,6 +523,15 @@ skip:
 
     RTS
 .endproc
+
+;*****************************************************************
+; Animate dice rolling (called in NMI)
+;*****************************************************************
+.segment "CODE"
+.proc animate_dice
+    
+.endproc
+
 
 .segment "RODATA"
 default_palette:
