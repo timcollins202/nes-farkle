@@ -448,6 +448,7 @@ not_pressing_start:
     STY temp + 1
     JSR rand                ;do it again
     STA temp + 2            ;now we have enough random bytes for 6 dice
+    STY temp + 3            ;get the last one for 0/7 mitigation
 
     ;split each byte into 2 3-byte nibbles and store them on the stack
     ;TODO- maybe store a random value to subtract/add to 0s/7s,
@@ -474,14 +475,26 @@ check_for_seven:
     PLA                     ;pull top byte off the stack
     CMP #7          
     BCC check_for_zero
-    ;we have a 7. subtract 1 from it (TODO- find a better way-- this turns all 7s to 6s)
+    ;we have a 7. subtract the bottom 2 bits (1-3) of the 3rd temp byte to get it 6 or lower
+        LDA temp + 3
+        AND #%00000011      ;get bottom 2 bits
+        TAX
         LDA #6
+    @loop:
+        SEC
+        SBC #1               ;this loop should decrement A by X
+        DEX
+        CPX #0
+        BNE @loop
         JMP skip
 check_for_zero:
     CMP #1
     BCS skip
-    ;we have a 0. add 1 to it (TODO- find a better way-- this turns all 0s into 1s)
-        LDA #1
+    ;we have a 0. Add the bottom 2 bits (1-3) of the 3rd temp byte to get it 1 or higher
+        LDA temp + 3        
+        SEC                     ;set carry then rotate left to ensure we don't get a zero
+        ROL
+        AND #%00000011          ;get just the bottom 2 bits 
 skip:
     STA dicerolls, y
     INY
