@@ -324,17 +324,22 @@ score_text:
     assign_16i text_address, score_text
     JSR write_text
 
-    ;draw tiles from starting_dice_tiles
+    ;draw a one die to the screen (for starters)
     vram_set_address (NAME_TABLE_0_ADDRESS + 7 * 32 + 1)
-    LDY #0          ;iterator
-@loop:
-    LDA starting_dice_tiles, y 
-    STA PPU_DATA
-    INY
-    CPY #128
-    BNE @loop
+
+
+    ;draw tiles from starting_dice_tiles
+;     vram_set_address (NAME_TABLE_0_ADDRESS + 7 * 32 + 1)
+;     LDY #0          ;iterator
+; @loop:
+;     LDA starting_dice_tiles, y 
+;     STA PPU_DATA
+;     INY
+;     CPY #128
+;     BNE @loop
 
     JSR ppu_update  ;wait til screen has been drawn
+    
     RTS
 .endproc
 
@@ -529,9 +534,20 @@ skip:
 ;*****************************************************************
 .segment "CODE"
 .proc animate_dice
-    
+
+    RTS
 .endproc
 
+.proc draw_die_one
+    LDA #$0b
+    STA PPU_DATA
+    ;We need a 16 bit address pointer to store vram location
+    ;loop over the rodata to write a row
+    ;add the necessary offset to get to start of next row to vram address
+    ;loop over the next row of rodata, etc.
+
+    RTS
+.endproc
 
 .segment "RODATA"
 default_palette:
@@ -552,3 +568,9 @@ starting_dice_tiles:
 	.byte $00,$0e,$13,$14,$0f,$00,$19,$1a,$03,$0f,$00,$19,$1f,$21,$0f,$00,$19,$1a,$2e,$27,$00,$19,$1f,$28,$27,$00,$2b,$2a,$2d,$2c,$00,$00
 	.byte $00,$0e,$15,$16,$0f,$00,$0e,$03,$1e,$1c,$00,$0e,$2e,$1f,$1c,$00,$24,$21,$1e,$1c,$00,$24,$28,$1f,$1c,$00,$2b,$2a,$2d,$2c,$00,$00
 	.byte $00,$10,$12,$12,$11,$00,$10,$12,$1d,$1b,$00,$10,$12,$1d,$1b,$00,$22,$23,$1d,$1b,$00,$22,$23,$1d,$1b,$00,$22,$23,$1d,$1b,$00,$00
+
+dice_one_tiles:
+    .byte $0b,$0c,$0c,$0d,
+    .byte $0e,$13,$14,$0f,
+    .byte $0e,$15,$16,$0f,
+    .byte $10,$12,$12,$11,
