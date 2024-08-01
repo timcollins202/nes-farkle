@@ -530,22 +530,68 @@ skip:
 .endproc
 
 ;*****************************************************************
-; Animate dice rolling (called in NMI)
+; draw_die  -- Draws a die to screen
+;   Inputs: paddr = VRAM address pointer
+;           A = number to put on die
 ;*****************************************************************
 .segment "CODE"
-.proc animate_dice
+.proc draw_die
+    vram_set_address_i(paddr)
 
-    RTS
-.endproc
+    ;figure out what number we are drawing and set X = starting index in dice_tiles
+    CMP #1
+    BNE :+
+        LDX #0      ;X = the index into dice_tiles we will start at
+        JMP gotnumber
+    :
+    CMP #2
+    BNE :+
+        LDX #16
+        JMP gotnumber
+    :
+    CMP #3
+    BNE :+
+        LDX #32
+        JMP gotnumber
+    :
+    CMP #4
+    BNE :+
+        LDX #48
+        JMP gotnumber
+    :
+    CMP #5
+    BNE :+
+        LDX #64
+        JMP gotnumber
+    :
+    CMP #6
+    BNE :+
+        LDX #80
+    :
+gotnumber:
 
-.proc draw_die_one
-    LDA #$0b
+    ;we have starting index in X.  
+    LDA #0
+    STA temp +8     ;temp+8 will be big loop iterator
+    LDY #0          ;small loop iterator
+loop:
+    LDA dice_tiles, x 
     STA PPU_DATA
-    ;We need a 16 bit address pointer to store vram location
-    ;loop over the rodata to write a row
-    ;add the necessary offset to get to start of next row to vram address
-    ;loop over the next row of rodata, etc.
+    INX
+    INY
+    CPY #4
+    BNE loop        ;this loop draws one row of the die tiles
 
+    ;add 29 to VRAM address to skip us to the start of the next row in the die
+    add_16_8 paddr, #29
+
+    LDA temp + 8
+    CLC
+    ADC #1          ;increment big loop iterator
+    CMP #4          ;run this for 4 rows
+    STA temp + 8
+    BNE loop
+    
     RTS
 .endproc
 
@@ -569,8 +615,10 @@ starting_dice_tiles:
 	.byte $00,$0e,$15,$16,$0f,$00,$0e,$03,$1e,$1c,$00,$0e,$2e,$1f,$1c,$00,$24,$21,$1e,$1c,$00,$24,$28,$1f,$1c,$00,$2b,$2a,$2d,$2c,$00,$00
 	.byte $00,$10,$12,$12,$11,$00,$10,$12,$1d,$1b,$00,$10,$12,$1d,$1b,$00,$22,$23,$1d,$1b,$00,$22,$23,$1d,$1b,$00,$22,$23,$1d,$1b,$00,$00
 
-dice_one_tiles:
-    .byte $0b,$0c,$0c,$0d,
-    .byte $0e,$13,$14,$0f,
-    .byte $0e,$15,$16,$0f,
-    .byte $10,$12,$12,$11,
+dice_tiles:
+    .byte $0b,$0c,$0c,$0d,$0e,$13,$14,$0f,$0e,$15,$16,$0f,$10,$12,$12,$11
+    .byte $17,$18,$0c,$0d,$19,$1a,$03,$0f,$0e,$03,$1e,$1c,$10,$12,$1d,$1b
+    .byte $17,$18,$0c,$0d,$19,$1f,$21,$0f,$0e,$2e,$1f,$1c,$10,$12,$1d,$1b
+    .byte $17,$18,$26,$25,$19,$1a,$2e,$27,$24,$21,$1e,$1c,$22,$23,$1d,$1b
+    .byte $17,$18,$26,$25,$19,$1f,$28,$27,$24,$28,$1f,$1c,$22,$23,$1d,$1b
+    .byte $17,$18,$26,$25,$2b,$2a,$2d,$2c,$2b,$2a,$2d,$2c,$22,$23,$1d,$1b
