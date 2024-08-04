@@ -163,7 +163,10 @@ wait_vblank2:
     LDA gamestate
     CMP #1                  ;gamestate bit 0 = rolling dice
     BNE :+
-        JSR animate_dice
+        JSR draw_rolled_dice
+        LDA #0
+        STA gamestate       ;reset gamestate
+        ;This is clearly not calling this correctly-- FIX IT!
     :
 
     ;write current scroll and control settings to PPU
@@ -325,7 +328,7 @@ score_text:
     JSR write_text
 
     ;draw a one die to the screen (for starters)
-    vram_set_address (NAME_TABLE_0_ADDRESS + 7 * 32 + 1)
+    ;vram_set_address (NAME_TABLE_0_ADDRESS + 7 * 32 + 1)
 
 
     ;draw tiles from starting_dice_tiles
@@ -529,47 +532,75 @@ skip:
     RTS
 .endproc
 
+
+;*****************************************************************
+; Draw rolled dice to the screen
+;*****************************************************************
+.segment "CODE"
+.proc draw_rolled_dice
+    ;set starting VRAM address pointer for draw_die
+    assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 1)
+
+    ;loop over dicerolls and draw each die
+    LDX #0              ;iterator 
+loop:  
+    LDY dicerolls, x 
+    JSR draw_die
+
+    add_16_8 paddr, #5  ;move starting VRAM address 5 tiles to the right
+
+    INX
+    CPX #6
+    BNE loop
+    
+    RTS
+.endproc
+
+
+
 ;*****************************************************************
 ; draw_die  -- Draws a die to screen
 ;   Inputs: paddr = VRAM address pointer
-;           A = number to put on die
+;           Y = number to put on die
 ;*****************************************************************
 .segment "CODE"
 .proc draw_die
-    vram_set_address_i(paddr)
+
+    vram_set_address_i paddr
 
     ;figure out what number we are drawing and set X = starting index in dice_tiles
-    CMP #1
+    CPY #1
     BNE :+
         LDX #0      ;X = the index into dice_tiles we will start at
         JMP gotnumber
     :
-    CMP #2
+    CPY #2
     BNE :+
         LDX #16
         JMP gotnumber
     :
-    CMP #3
+    CPY #3
     BNE :+
         LDX #32
         JMP gotnumber
     :
-    CMP #4
+    CPY #4
     BNE :+
         LDX #48
         JMP gotnumber
     :
-    CMP #5
+    CPY #5
     BNE :+
         LDX #64
         JMP gotnumber
     :
-    CMP #6
+    CPY #6
     BNE :+
         LDX #80
     :
-gotnumber:
+gotnumber:          ;at this point we don't need Y anymore
 
+    JSR ppu_off
     ;we have starting index in X.  
     LDA #0
     STA temp +8     ;temp+8 will be big loop iterator
@@ -584,6 +615,7 @@ loop:
 
     ;add 29 to VRAM address to skip us to the start of the next row in the die
     add_16_8 paddr, #29
+    vram_set_address_i paddr
 
     LDA temp + 8
     CLC
@@ -591,6 +623,8 @@ loop:
     CMP #4          ;run this for 4 rows
     STA temp + 8
     BNE loop
+
+    JSR ppu_update
     
     RTS
 .endproc
