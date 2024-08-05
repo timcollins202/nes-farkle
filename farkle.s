@@ -163,9 +163,9 @@ wait_vblank2:
     LDA gamestate
     CMP #1                  ;gamestate bit 0 = rolling dice
     BNE :+
-        JSR draw_rolled_dice
-        LDA #0
-        STA gamestate       ;reset gamestate
+        ;JSR draw_rolled_dice
+        ;LDA #0
+        ;STA gamestate       ;reset gamestate
         ;This is clearly not calling this correctly-- FIX IT!
     :
 
@@ -326,6 +326,22 @@ score_text:
     vram_set_address (NAME_TABLE_0_ADDRESS + 2 * 32 + 9)
     assign_16i text_address, score_text
     JSR write_text
+
+    ;make fake dicerolls for starting dice
+    LDY #0      ;iterator
+    LDX #1      ;value to put into dicerolls
+rollloop:
+    STX dicerolls, y
+    INX
+    INY
+    CPY #6
+    BNE rollloop
+
+    JSR draw_rolled_dice
+    ; LDY #2
+    ; assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 1)
+    ; JSR draw_die
+
 
     ;draw a one die to the screen (for starters)
     ;vram_set_address (NAME_TABLE_0_ADDRESS + 7 * 32 + 1)
@@ -544,11 +560,14 @@ skip:
     ;loop over dicerolls and draw each die
     LDX #0              ;iterator 
 loop:  
+    TXA
+    PHA
     LDY dicerolls, x 
+    TXS                 ;push X to stack
     JSR draw_die
-
     add_16_8 paddr, #5  ;move starting VRAM address 5 tiles to the right
-
+    PLA 
+    TAX
     INX
     CPX #6
     BNE loop
@@ -600,7 +619,6 @@ loop:
     :
 gotnumber:          ;at this point we don't need Y anymore
 
-    JSR ppu_off
     ;we have starting index in X.  
     LDA #0
     STA temp +8     ;temp+8 will be big loop iterator
@@ -613,16 +631,17 @@ loop:
     CPY #4
     BNE loop        ;this loop draws one row of the die tiles
 
-    ;add 29 to VRAM address to skip us to the start of the next row in the die
-    add_16_8 paddr, #29
+    ;add 29 to VRAM address to skip  the start of the next row in the die
+    add_16_8 paddr, #32
     vram_set_address_i paddr
 
+    LDY #0          ;reset small loop iterator
     LDA temp + 8
     CLC
     ADC #1          ;increment big loop iterator
     CMP #4          ;run this for 4 rows
     STA temp + 8
-    BNE loop
+    BNE loop    
 
     JSR ppu_update
     
