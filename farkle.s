@@ -327,24 +327,21 @@ score_text:
     assign_16i text_address, score_text
     JSR write_text
 
-;     ;make fake dicerolls for starting dice
-;     LDY #0      ;iterator
-;     LDX #1      ;value to put into dicerolls
-; rollloop:
-;     STX dicerolls, y
-;     INX
-;     INY
-;     CPY #6
-;     BNE rollloop
+    ;make fake dicerolls for starting dice
+    LDY #0      ;iterator
+    LDX #1      ;value to put into dicerolls
+rollloop:
+    STX dicerolls, y
+    INX
+    INY
+    CPY #6
+    BNE rollloop
+
+    JSR draw_rolled_dice
 
     ;JSR draw_rolled_dice
     ;instead of claling draw_rolled_dice here, try to do it manually
-    LDY #1
-    assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 1)
-    JSR draw_die
-
-    LDY #2
-    assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 6)
+   
 
     ; LDY #2
     ; assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 1)
@@ -562,23 +559,29 @@ skip:
 ;*****************************************************************
 .segment "CODE"
 .proc draw_rolled_dice
-    ;set starting VRAM address pointer for draw_die
+    LDY dicerolls
     assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 1)
-
-    ;loop over dicerolls and draw each die
-    LDX #0              ;iterator 
-loop:  
-    TXA
-    PHA
-    LDY dicerolls, x 
-    TXS                 ;push X to stack
     JSR draw_die
-    add_16_8 paddr, #5  ;move starting VRAM address 5 tiles to the right
-    PLA 
-    TAX
-    INX
-    CPX #6
-    BNE loop
+
+    LDY dicerolls + 1
+    assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 6)
+    JSR draw_die
+
+    LDY dicerolls + 2
+    assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 11)
+    JSR draw_die
+
+    LDY dicerolls + 3
+    assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 16)
+    JSR draw_die
+
+    LDY dicerolls + 4
+    assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 21)
+    JSR draw_die
+
+    LDY dicerolls + 5
+    assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 26)
+    JSR draw_die
     
     RTS
 .endproc
