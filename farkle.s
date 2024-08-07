@@ -339,29 +339,6 @@ rollloop:
 
     JSR draw_rolled_dice
 
-    ;JSR draw_rolled_dice
-    ;instead of claling draw_rolled_dice here, try to do it manually
-   
-
-    ; LDY #2
-    ; assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 1)
-    ; JSR draw_die
-
-
-    ;draw a one die to the screen (for starters)
-    ;vram_set_address (NAME_TABLE_0_ADDRESS + 7 * 32 + 1)
-
-
-    ;draw tiles from starting_dice_tiles
-;     vram_set_address (NAME_TABLE_0_ADDRESS + 7 * 32 + 1)
-;     LDY #0          ;iterator
-; @loop:
-;     LDA starting_dice_tiles, y 
-;     STA PPU_DATA
-;     INY
-;     CPY #128
-;     BNE @loop
-
     JSR ppu_update  ;wait til screen has been drawn
     
     RTS
@@ -478,6 +455,7 @@ not_pressing_left:
         BNE not_pressing_start
             ;we are pressing start pre-roll.  Roll em!
             JSR roll_dice
+            JSR draw_rolled_dice
 not_pressing_start:
 
     RTS
@@ -672,12 +650,6 @@ default_palette:
     .byte $0F,$14,$24,$34
     .byte $0F,$1B,$2B,$3B
     .byte $0F,$12,$22,$32
-
-starting_dice_tiles:
-    .byte $00,$0b,$0c,$0c,$0d,$00,$17,$18,$0c,$0d,$00,$17,$18,$0c,$0d,$00,$17,$18,$26,$25,$00,$17,$18,$26,$25,$00,$17,$18,$26,$25,$00,$00
-	.byte $00,$0e,$13,$14,$0f,$00,$19,$1a,$03,$0f,$00,$19,$1f,$21,$0f,$00,$19,$1a,$2e,$27,$00,$19,$1f,$28,$27,$00,$2b,$2a,$2d,$2c,$00,$00
-	.byte $00,$0e,$15,$16,$0f,$00,$0e,$03,$1e,$1c,$00,$0e,$2e,$1f,$1c,$00,$24,$21,$1e,$1c,$00,$24,$28,$1f,$1c,$00,$2b,$2a,$2d,$2c,$00,$00
-	.byte $00,$10,$12,$12,$11,$00,$10,$12,$1d,$1b,$00,$10,$12,$1d,$1b,$00,$22,$23,$1d,$1b,$00,$22,$23,$1d,$1b,$00,$22,$23,$1d,$1b,$00,$00
 
 dice_tiles:
     .byte $0b,$0c,$0c,$0d,$0e,$13,$14,$0f,$0e,$15,$16,$0f,$10,$12,$12,$11
