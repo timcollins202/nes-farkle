@@ -327,17 +327,25 @@ score_text:
     assign_16i text_address, score_text
     JSR write_text
 
-    ;make fake dicerolls for starting dice
-    LDY #0      ;iterator
-    LDX #1      ;value to put into dicerolls
-rollloop:
-    STX dicerolls, y
-    INX
-    INY
-    CPY #6
-    BNE rollloop
+;     ;make fake dicerolls for starting dice
+;     LDY #0      ;iterator
+;     LDX #1      ;value to put into dicerolls
+; rollloop:
+;     STX dicerolls, y
+;     INX
+;     INY
+;     CPY #6
+;     BNE rollloop
 
-    JSR draw_rolled_dice
+    ;JSR draw_rolled_dice
+    ;instead of claling draw_rolled_dice here, try to do it manually
+    LDY #1
+    assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 1)
+    JSR draw_die
+
+    LDY #2
+    assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 6)
+
     ; LDY #2
     ; assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 1)
     ; JSR draw_die
