@@ -163,7 +163,10 @@ wait_vblank2:
     LDA gamestate
     CMP #1                  ;gamestate bit 0 = rolling dice
     BNE :+
-        JSR animate_dice
+        ;JSR draw_rolled_dice
+        ;LDA #0
+        ;STA gamestate       ;reset gamestate
+        ;This is clearly not calling this correctly-- FIX IT!
     :
 
     ;write current scroll and control settings to PPU
@@ -324,19 +327,17 @@ score_text:
     assign_16i text_address, score_text
     JSR write_text
 
-    ;draw a one die to the screen (for starters)
-    vram_set_address (NAME_TABLE_0_ADDRESS + 7 * 32 + 1)
+    ;make fake dicerolls for starting dice
+    LDY #0      ;iterator
+    LDX #1      ;value to put into dicerolls
+rollloop:
+    STX dicerolls, y
+    INX
+    INY
+    CPY #6
+    BNE rollloop
 
-
-    ;draw tiles from starting_dice_tiles
-;     vram_set_address (NAME_TABLE_0_ADDRESS + 7 * 32 + 1)
-;     LDY #0          ;iterator
-; @loop:
-;     LDA starting_dice_tiles, y 
-;     STA PPU_DATA
-;     INY
-;     CPY #128
-;     BNE @loop
+    JSR draw_rolled_dice
 
     JSR ppu_update  ;wait til screen has been drawn
     
@@ -373,10 +374,10 @@ score_text:
     LDA #SPRITE_FLIP_HORIZ|SPRITE_FLIP_VERT|SPRITE_PALETTE_1
     STA SELECTOR_4_ATTR
     ;set the X position for all 4 parts of the selector (byte 3)
-    LDA #24
+    LDA #17
     STA SELECTOR_1_XPOS
     STA SELECTOR_3_XPOS
-    LDA #32
+    LDA #25
     STA SELECTOR_2_XPOS
     STA SELECTOR_4_XPOS
 
@@ -400,7 +401,7 @@ score_text:
     BEQ not_pressing_right
         ;we are pressing right. Make sure we aren't already on right edge
         LDA SELECTOR_1_XPOS         ;get X position of top left selector sprite
-        CMP #224                    ;can't go any farther right than this
+        CMP #217                    ;can't go any farther right than this
         BEQ not_pressing_right
         ;we are not on right edge.  Move selector to the next die to the right
             CLC
@@ -425,7 +426,7 @@ not_pressing_right:
     BEQ not_pressing_left
         ;we are pressing left.  Make sure we aren't already at left edge.
         LDA SELECTOR_1_XPOS
-        CMP #24                    ;starting X pos is 24 for top right sprite
+        CMP #17                    ;starting X pos is 24 for top right sprite
         BEQ not_pressing_left
         ;we are not on left edge.  Move selector the next die to the left
             SEC
@@ -454,6 +455,7 @@ not_pressing_left:
         BNE not_pressing_start
             ;we are pressing start pre-roll.  Roll em!
             JSR roll_dice
+            JSR draw_rolled_dice
 not_pressing_start:
 
     RTS
@@ -529,46 +531,81 @@ skip:
     RTS
 .endproc
 
+
+;*****************************************************************
+; Draw rolled dice to the screen
+;*****************************************************************
+.segment "CODE"
+.proc draw_rolled_dice
+    LDY dicerolls
+    assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 1)
+    JSR draw_die
+
+    LDY dicerolls + 1
+    assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 6)
+    JSR draw_die
+
+    LDY dicerolls + 2
+    assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 11)
+    JSR draw_die
+
+    LDY dicerolls + 3
+    assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 16)
+    JSR draw_die
+
+    LDY dicerolls + 4
+    assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 21)
+    JSR draw_die
+
+    LDY dicerolls + 5
+    assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 26)
+    JSR draw_die
+    
+    RTS
+.endproc
+
+
 ;*****************************************************************
 ; draw_die  -- Draws a die to screen
 ;   Inputs: paddr = VRAM address pointer
-;           A = number to put on die
+;           Y = number to put on die
 ;*****************************************************************
 .segment "CODE"
 .proc draw_die
-    vram_set_address_i(paddr)
+
+    vram_set_address_i paddr
 
     ;figure out what number we are drawing and set X = starting index in dice_tiles
-    CMP #1
+    CPY #1
     BNE :+
         LDX #0      ;X = the index into dice_tiles we will start at
         JMP gotnumber
     :
-    CMP #2
+    CPY #2
     BNE :+
         LDX #16
         JMP gotnumber
     :
-    CMP #3
+    CPY #3
     BNE :+
         LDX #32
         JMP gotnumber
     :
-    CMP #4
+    CPY #4
     BNE :+
         LDX #48
         JMP gotnumber
     :
-    CMP #5
+    CPY #5
     BNE :+
         LDX #64
         JMP gotnumber
     :
-    CMP #6
+    CPY #6
     BNE :+
         LDX #80
     :
-gotnumber:
+gotnumber:          ;at this point we don't need Y anymore
 
     ;we have starting index in X.  
     LDA #0
@@ -582,15 +619,19 @@ loop:
     CPY #4
     BNE loop        ;this loop draws one row of the die tiles
 
-    ;add 29 to VRAM address to skip us to the start of the next row in the die
-    add_16_8 paddr, #29
+    ;add 29 to VRAM address to skip  the start of the next row in the die
+    add_16_8 paddr, #32
+    vram_set_address_i paddr
 
+    LDY #0          ;reset small loop iterator
     LDA temp + 8
     CLC
     ADC #1          ;increment big loop iterator
     CMP #4          ;run this for 4 rows
     STA temp + 8
-    BNE loop
+    BNE loop    
+
+    JSR ppu_update
     
     RTS
 .endproc
@@ -608,12 +649,6 @@ default_palette:
     .byte $0F,$14,$24,$34
     .byte $0F,$1B,$2B,$3B
     .byte $0F,$12,$22,$32
-
-starting_dice_tiles:
-    .byte $00,$0b,$0c,$0c,$0d,$00,$17,$18,$0c,$0d,$00,$17,$18,$0c,$0d,$00,$17,$18,$26,$25,$00,$17,$18,$26,$25,$00,$17,$18,$26,$25,$00,$00
-	.byte $00,$0e,$13,$14,$0f,$00,$19,$1a,$03,$0f,$00,$19,$1f,$21,$0f,$00,$19,$1a,$2e,$27,$00,$19,$1f,$28,$27,$00,$2b,$2a,$2d,$2c,$00,$00
-	.byte $00,$0e,$15,$16,$0f,$00,$0e,$03,$1e,$1c,$00,$0e,$2e,$1f,$1c,$00,$24,$21,$1e,$1c,$00,$24,$28,$1f,$1c,$00,$2b,$2a,$2d,$2c,$00,$00
-	.byte $00,$10,$12,$12,$11,$00,$10,$12,$1d,$1b,$00,$10,$12,$1d,$1b,$00,$22,$23,$1d,$1b,$00,$22,$23,$1d,$1b,$00,$22,$23,$1d,$1b,$00,$00
 
 dice_tiles:
     .byte $0b,$0c,$0c,$0d,$0e,$13,$14,$0f,$0e,$15,$16,$0f,$10,$12,$12,$11
