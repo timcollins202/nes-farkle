@@ -374,10 +374,10 @@ rollloop:
     LDA #SPRITE_FLIP_HORIZ|SPRITE_FLIP_VERT|SPRITE_PALETTE_1
     STA SELECTOR_4_ATTR
     ;set the X position for all 4 parts of the selector (byte 3)
-    LDA #24
+    LDA #17
     STA SELECTOR_1_XPOS
     STA SELECTOR_3_XPOS
-    LDA #32
+    LDA #25
     STA SELECTOR_2_XPOS
     STA SELECTOR_4_XPOS
 
@@ -401,7 +401,7 @@ rollloop:
     BEQ not_pressing_right
         ;we are pressing right. Make sure we aren't already on right edge
         LDA SELECTOR_1_XPOS         ;get X position of top left selector sprite
-        CMP #224                    ;can't go any farther right than this
+        CMP #217                    ;can't go any farther right than this
         BEQ not_pressing_right
         ;we are not on right edge.  Move selector to the next die to the right
             CLC
@@ -426,7 +426,7 @@ not_pressing_right:
     BEQ not_pressing_left
         ;we are pressing left.  Make sure we aren't already at left edge.
         LDA SELECTOR_1_XPOS
-        CMP #24                    ;starting X pos is 24 for top right sprite
+        CMP #17                    ;starting X pos is 24 for top right sprite
         BEQ not_pressing_left
         ;we are not on left edge.  Move selector the next die to the left
             SEC
@@ -563,7 +563,6 @@ skip:
     
     RTS
 .endproc
-
 
 
 ;*****************************************************************
