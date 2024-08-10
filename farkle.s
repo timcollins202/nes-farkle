@@ -49,6 +49,7 @@ gamestate:      .res 1  ;each bit denotes a gamestate:
                         ;0 = starting roll, 1 = rolling dice, 2 = choosing dice, etc.
 update:         .res 1  ;each bit denotes something needs to update:
                         ;0 = score, 1 = highscore
+diceupdate:     .res 1  ;bits 0-5 denotes a die that needs to be redrawn.
 dicerolls:      .res 6  ;outcomes of dice rolls, one die per byte
 
 
@@ -159,15 +160,15 @@ wait_vblank2:
     BCC @loop
 
     ;new graphical updating stuff goes here
-    ;check gamestate for updates
-    LDA gamestate
-    CMP #1                  ;gamestate bit 0 = rolling dice
-    BNE :+
-        ;JSR draw_rolled_dice
-        ;LDA #0
-        ;STA gamestate       ;reset gamestate
-        ;This is clearly not calling this correctly-- FIX IT!
-    :
+    ;check diceupdates to see if we need to redraw any dice
+    LDA #%00000001
+    BIT diceupdate              ;check for an update to die 1
+    BEQ @skipdice
+        LDY dicerolls
+        assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 1)
+        JSR draw_die
+        
+@skipdice:
 
     ;write current scroll and control settings to PPU
     LDA #0
@@ -455,7 +456,9 @@ not_pressing_left:
         BNE not_pressing_start
             ;we are pressing start pre-roll.  Roll em!
             JSR roll_dice
-            JSR draw_rolled_dice
+            LDA #1
+            STA diceupdate
+            ;JSR draw_rolled_dice
 not_pressing_start:
 
     RTS
@@ -572,7 +575,7 @@ skip:
 ;*****************************************************************
 .segment "CODE"
 .proc draw_die
-
+    
     vram_set_address_i paddr
 
     ;figure out what number we are drawing and set X = starting index in dice_tiles
@@ -630,8 +633,6 @@ loop:
     CMP #4          ;run this for 4 rows
     STA temp + 8
     BNE loop    
-
-    JSR ppu_update
     
     RTS
 .endproc
