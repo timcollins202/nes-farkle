@@ -49,7 +49,7 @@ gamestate:      .res 1  ;each bit denotes a gamestate:
                         ;0 = starting roll, 1 = rolling dice, 2 = choosing dice, etc.
 update:         .res 1  ;each bit denotes something needs to update:
                         ;0 = score, 1 = highscore
-diceupdate:     .res 1  ;bits 0-5 denotes a die that needs to be redrawn.
+diceupdate:     .res 1  ;bits 0-5 denote a die that needs to be redrawn.
 dicerolls:      .res 6  ;outcomes of dice rolls, one die per byte
 
 
@@ -161,14 +161,34 @@ wait_vblank2:
 
     ;new graphical updating stuff goes here
     ;check diceupdates to see if we need to redraw any dice
+    LDA #0
+    CMP diceupdate
+    BEQ @donecheckingdice       ;skip all this if diceupdate = 0
+
     LDA #%00000001
     BIT diceupdate              ;check for an update to die 1
-    BEQ @skipdice
+    BEQ @checkdie2
         LDY dicerolls
         assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 1)
         JSR draw_die
-        
-@skipdice:
+@checkdie2:
+    LDA #%00000010          
+    BIT diceupdate              ;check for an update to die 2
+    BEQ @checkdie3
+        LDY dicerolls + 1
+        assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 6)
+        JSR draw_die
+@checkdie3:
+;     LDA #%00000100          
+;     BIT diceupdate              ;check for an update to die 3
+;     BEQ @checkdie4
+;         LDY dicerolls + 2
+;         assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 11)
+;         JSR draw_die
+; @checkdie4:
+@donecheckingdice:
+    LDA #0
+    STA diceupdate          ;reset diceupdate to 
 
     ;write current scroll and control settings to PPU
     LDA #0
@@ -217,6 +237,10 @@ paletteloop:
     INX
     CPX #32
     BCC paletteloop
+
+    ;initialize diceupdate to 0
+    LDA #0
+    STA diceupdate
 
     JSR display_title_screen
 
@@ -456,7 +480,7 @@ not_pressing_left:
         BNE not_pressing_start
             ;we are pressing start pre-roll.  Roll em!
             JSR roll_dice
-            LDA #1
+            LDA #%00111111
             STA diceupdate
             ;JSR draw_rolled_dice
 not_pressing_start:
@@ -612,7 +636,7 @@ gotnumber:          ;at this point we don't need Y anymore
 
     ;we have starting index in X.  
     LDA #0
-    STA temp +8     ;temp+8 will be big loop iterator
+    STA temp + 8     ;temp+8 will be big loop iterator
     LDY #0          ;small loop iterator
 loop:
     LDA dice_tiles, x 
@@ -632,7 +656,7 @@ loop:
     ADC #1          ;increment big loop iterator
     CMP #4          ;run this for 4 rows
     STA temp + 8
-    BNE loop    
+    BNE loop
     
     RTS
 .endproc
