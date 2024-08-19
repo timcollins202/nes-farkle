@@ -39,18 +39,19 @@ INES_SRAM   = 0 ; 1 = battery backed SRAM at $6000-7FFF
 ; Reserve memory for variables
 ;*****************************************************************
 .segment "ZEROPAGE"
-time:           .res 2  ;time tick counter
-lasttime:       .res 1  ;what time was last time it was checked
-temp:           .res 10 ;general purpose temp space
-paddr:          .res 2  ;16-bit address pointer
-score:          .res 3  ;current score
-highscore:      .res 3  ;high score
-gamestate:      .res 1  ;each bit denotes a gamestate:
-                        ;0 = starting roll, 1 = rolling dice, 2 = choosing dice, etc.
-update:         .res 1  ;each bit denotes something needs to update:
-                        ;0 = score, 1 = highscore
-diceupdate:     .res 1  ;bits 0-5 denote a die that needs to be redrawn.
-dicerolls:      .res 6  ;outcomes of dice rolls, one die per byte
+time:               .res 2  ;time tick counter
+lasttime:           .res 1  ;what time was last time it was checked
+temp:               .res 10 ;general purpose temp space
+paddr:              .res 2  ;16-bit address pointer
+score:              .res 3  ;current score
+highscore:          .res 3  ;high score
+gamestate:          .res 1  ;each bit denotes a gamestate:
+                            ;0 = starting roll, 1 = rolling dice, 2 = choosing dice, etc.
+update:             .res 1  ;each bit denotes something needs to update:
+                            ;0 = score, 1 = highscore
+dicerolls:          .res 6  ;outcomes of dice rolls, one die per byte
+diceupdate:         .res 1  ;bits 0-5 denote a die that needs to be redrawn.
+dicevblankcount:    .res 1  ;tracks how many updates we have done this vblank.
 
 
 .segment "OAM"
@@ -160,35 +161,7 @@ wait_vblank2:
     BCC @loop
 
     ;new graphical updating stuff goes here
-    ;check diceupdates to see if we need to redraw any dice
-    LDA #0
-    CMP diceupdate
-    BEQ @donecheckingdice       ;skip all this if diceupdate = 0
-
-    LDA #%00000001
-    BIT diceupdate              ;check for an update to die 1
-    BEQ @checkdie2
-        LDY dicerolls
-        assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 1)
-        JSR draw_die
-@checkdie2:
-    LDA #%00000010          
-    BIT diceupdate              ;check for an update to die 2
-    BEQ @checkdie3
-        LDY dicerolls + 1
-        assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 6)
-        JSR draw_die
-@checkdie3:
-;     LDA #%00000100          
-;     BIT diceupdate              ;check for an update to die 3
-;     BEQ @checkdie4
-;         LDY dicerolls + 2
-;         assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 11)
-;         JSR draw_die
-; @checkdie4:
-@donecheckingdice:
-    LDA #0
-    STA diceupdate          ;reset diceupdate to 
+    JSR update_dice
 
     ;write current scroll and control settings to PPU
     LDA #0
@@ -591,6 +564,12 @@ skip:
     RTS
 .endproc
 
+;*****************************************************************
+; Check whether we have done 2 dice updates this vblank
+;*****************************************************************
+.segment "CODE"
+.proc 
+
 
 ;*****************************************************************
 ; draw_die  -- Draws a die to screen
@@ -657,9 +636,73 @@ loop:
     CMP #4          ;run this for 4 rows
     STA temp + 8
     BNE loop
+
+    INC dicevblankcount
     
     RTS
 .endproc
+
+;*****************************************************************
+; update_dice: Updates dice tiles during vblank
+;*****************************************************************
+.segment "CODE"
+.proc update_dice
+    ;check diceupdates to see if we need to redraw any dice
+    LDA #0
+    CMP diceupdate
+    BNE :+                      ;bounce if diceupdate = 0
+        RTS
+    :
+
+    ;LDX dicevblankcount         ;we can only update 2 dice per vblank
+    ;CPX #2
+    LDA #%00000001
+    BIT diceupdate              ;check for an update to die 1
+    BEQ @checkdie2
+        LDY dicerolls
+        assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 1)
+        JSR draw_die
+@checkdie2:
+    LDA #%00000010          
+    BIT diceupdate              ;check for an update to die 2
+    BEQ @checkdie3
+        LDY dicerolls + 1
+        assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 6)
+        JSR draw_die
+@checkdie3:
+    LDA #%00000100          
+    BIT diceupdate              ;check for an update to die 3
+    BEQ @checkdie4
+        LDY dicerolls + 2
+        assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 11)
+        JSR draw_die
+@checkdie4:
+    LDA #%00001000
+    BIT diceupdate              ;check for an update to die 4
+    BEQ @checkdie4
+        LDY dicerolls + 3
+        assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 16)
+        JSR draw_die
+@checkdie5:
+    LDA #%00010000
+    BIT diceupdate              ;check for an update to die 5
+    BEQ @checkdie6
+        LDY dicerolls + 4
+        assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 21)
+        JSR draw_die
+@checkdie6:
+    LDA #%00100000
+    BIT diceupdate          ;check for an update to die 5
+    BEQ @donecheckingdice
+        LDY dicerolls + 5
+        assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 26)
+        JSR draw_die
+
+@donecheckingdice:
+    LDA #0
+    STA diceupdate          ;reset diceupdate to 
+.endproc
+
 
 .segment "RODATA"
 default_palette:
