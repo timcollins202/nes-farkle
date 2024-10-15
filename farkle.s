@@ -650,18 +650,19 @@ loop:
     ;check diceupdates to see if we need to redraw any dice
     LDA #0
     CMP diceupdate
-    BNE :+                      ;bounce if diceupdate = 0
+    BNE :+                          ;GTFO if diceupdate = 0
         RTS
     :
 
-    ;LDX dicevblankcount         ;we can only update 2 dice per vblank
+    ;LDX dicevblankcount            ;we can only update 2 dice per vblank
     ;CPX #2
     LDA #%00000001
-    BIT diceupdate              ;check for an update to die 1
+    BIT diceupdate                  ;check for an update to die 1
     BEQ @checkdie2
         LDY dicerolls
         assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 1)
         JSR draw_die
+        ;flip byte 0, figure out how to do this
 @checkdie2:
     LDA #%00000010          
     BIT diceupdate              ;check for an update to die 2
@@ -669,7 +670,15 @@ loop:
         LDY dicerolls + 1
         assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 6)
         JSR draw_die
+        ;flip byte 1, etc.
 @checkdie3:
+        LDX #2
+        CPX dicevblankcount         ;make sure we have not exceeded 2 updates this vblank
+        BCS :+
+            LDX #0                  ;we have exceeded 2 updates this vblank.
+            STX dicevblankcount     ;reset dicevblankcount and GTFO         
+            RTS
+        :
     LDA #%00000100          
     BIT diceupdate              ;check for an update to die 3
     BEQ @checkdie4
