@@ -8,7 +8,7 @@
 @del farkle.nes.dbg
 @echo.
 @echo Compiling...
-\cc65\bin\ca65 farkle.s -g -o farkle.o
+\cc65\bin\ca65 farkle.asm -g -o farkle.o
 @IF ERRORLEVEL 1 GOTO failure
 @echo.
 @echo Linking...

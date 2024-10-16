@@ -63,7 +63,7 @@ palette: .res 32        ;current palette buffer
 ;*****************************************************************
 ; Include external files
 ;*****************************************************************
-.include "neslib.s"         ;General Purpose NES Library
+.include "neslib.asm"         ;General Purpose NES Library
 .include "constants.inc"    ;Game-specific constants
 
 
@@ -567,8 +567,8 @@ skip:
 ;*****************************************************************
 ; Check whether we have done 2 dice updates this vblank
 ;*****************************************************************
-.segment "CODE"
-.proc 
+; .segment "CODE"
+; .proc 
 
 
 ;*****************************************************************
@@ -652,17 +652,27 @@ loop:
     CMP diceupdate
     BNE :+                          ;GTFO if diceupdate = 0
         RTS
+    :    
+
+    ;dicevblankcount > 2 means we have updated 2 dice this vblank. That's the limit!
+@checkdicevblankcount:
+    LDA #2            
+    CMP dicevblankcount
+    BNE :+
+        RTS
     :
 
-    ;LDX dicevblankcount            ;we can only update 2 dice per vblank
-    ;CPX #2
     LDA #%00000001
     BIT diceupdate                  ;check for an update to die 1
     BEQ @checkdie2
         LDY dicerolls
         assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 1)
         JSR draw_die
-        ;flip byte 0, figure out how to do this
+        ;flip byte 0 of diceupdate
+        LDA #%00000001
+        EOR diceupdate
+        STA diceupdate
+        JMP @checkdicevblankcount
 @checkdie2:
     LDA #%00000010          
     BIT diceupdate              ;check for an update to die 2
@@ -670,21 +680,23 @@ loop:
         LDY dicerolls + 1
         assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 6)
         JSR draw_die
-        ;flip byte 1, etc.
+        ;flip byte 1 of diceupdate
+        LDA #%00000010
+        EOR diceupdate
+        STA diceupdate
+        JMP @checkdicevblankcount
 @checkdie3:
-        LDX #2
-        CPX dicevblankcount         ;make sure we have not exceeded 2 updates this vblank
-        BCS :+
-            LDX #0                  ;we have exceeded 2 updates this vblank.
-            STX dicevblankcount     ;reset dicevblankcount and GTFO         
-            RTS
-        :
     LDA #%00000100          
     BIT diceupdate              ;check for an update to die 3
     BEQ @checkdie4
         LDY dicerolls + 2
         assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 11)
         JSR draw_die
+        ;flip byte 2 of diceupdate
+        LDA #%00000100
+        EOR diceupdate
+        STA diceupdate
+        JMP @checkdicevblankcount
 @checkdie4:
     LDA #%00001000
     BIT diceupdate              ;check for an update to die 4
@@ -692,6 +704,11 @@ loop:
         LDY dicerolls + 3
         assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 16)
         JSR draw_die
+        ;flip byte 3 of diceupdate
+        LDA #%00001000
+        EOR diceupdate
+        STA diceupdate
+        JMP @checkdicevblankcount
 @checkdie5:
     LDA #%00010000
     BIT diceupdate              ;check for an update to die 5
@@ -699,6 +716,11 @@ loop:
         LDY dicerolls + 4
         assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 21)
         JSR draw_die
+        ;flip byte 4 of diceupdate
+        LDA #%00010000
+        EOR diceupdate
+        STA diceupdate
+        JMP @checkdicevblankcount
 @checkdie6:
     LDA #%00100000
     BIT diceupdate          ;check for an update to die 5
@@ -706,10 +728,17 @@ loop:
         LDY dicerolls + 5
         assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 26)
         JSR draw_die
+        ;flip byte 2 of diceupdate
+        LDA #%00100000
+        EOR diceupdate
+        STA diceupdate
+        JMP @checkdicevblankcount
 
 @donecheckingdice:
-    LDA #0
-    STA diceupdate          ;reset diceupdate to 
+    ; LDA #0
+    ; STA diceupdate          ;reset diceupdate to 
+
+    RTS
 .endproc
 
 
