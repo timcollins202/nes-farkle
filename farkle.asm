@@ -154,14 +154,13 @@ wait_vblank2:
     vram_set_address $3f00
     LDX #0      ;transfer the 32 bytes to VRRAM
 @loop:
-    LDA palette, x 
+    LDA palette, x
     STA PPU_DATA
     INX
     CPX #32
     BCC @loop
 
     ;new graphical updating stuff goes here
-    JSR update_dice
 
     ;write current scroll and control settings to PPU
     LDA #0
@@ -259,6 +258,12 @@ mainloop:
 
     ;loop calls go here
     JSR player_actions
+
+    ;if diceupdate != 0, update dice tiles
+    LDA diceupdate
+    CMP #0
+    BEQ mainloop
+    JSR update_dice
 
     JMP mainloop
 .endproc
@@ -455,7 +460,6 @@ not_pressing_left:
             JSR roll_dice
             LDA #%00111111
             STA diceupdate
-            ;JSR draw_rolled_dice
 not_pressing_start:
 
     RTS
@@ -662,6 +666,8 @@ loop:
         RTS
     :
 
+    jsr ppu_off
+
     LDA #%00000001
     BIT diceupdate                  ;check for an update to die 1
     BEQ @checkdie2
@@ -672,6 +678,7 @@ loop:
         LDA #%00000001
         EOR diceupdate
         STA diceupdate
+        JSR ppu_update
         JMP @checkdicevblankcount
 @checkdie2:
     LDA #%00000010          
@@ -684,6 +691,7 @@ loop:
         LDA #%00000010
         EOR diceupdate
         STA diceupdate
+        JSR ppu_update
         JMP @checkdicevblankcount
 @checkdie3:
     LDA #%00000100          
@@ -696,11 +704,12 @@ loop:
         LDA #%00000100
         EOR diceupdate
         STA diceupdate
+        JSR ppu_update
         JMP @checkdicevblankcount
 @checkdie4:
     LDA #%00001000
     BIT diceupdate              ;check for an update to die 4
-    BEQ @checkdie4
+    BEQ @checkdie5
         LDY dicerolls + 3
         assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 16)
         JSR draw_die
@@ -708,6 +717,7 @@ loop:
         LDA #%00001000
         EOR diceupdate
         STA diceupdate
+        JSR ppu_update
         JMP @checkdicevblankcount
 @checkdie5:
     LDA #%00010000
@@ -720,6 +730,7 @@ loop:
         LDA #%00010000
         EOR diceupdate
         STA diceupdate
+        JSR ppu_update
         JMP @checkdicevblankcount
 @checkdie6:
     LDA #%00100000
@@ -728,16 +739,17 @@ loop:
         LDY dicerolls + 5
         assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 26)
         JSR draw_die
-        ;flip byte 2 of diceupdate
+        ;flip byte 5 of diceupdate
         LDA #%00100000
         EOR diceupdate
         STA diceupdate
+        JSR ppu_update
         JMP @checkdicevblankcount
 
 @donecheckingdice:
     ; LDA #0
     ; STA diceupdate          ;reset diceupdate to 
-
+    JSR ppu_update
     RTS
 .endproc
 
