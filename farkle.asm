@@ -747,8 +747,6 @@ loop:
         JMP @checkdicevblankcount
 
 @donecheckingdice:
-    ; LDA #0
-    ; STA diceupdate          ;reset diceupdate to 
     JSR ppu_update
     RTS
 .endproc
