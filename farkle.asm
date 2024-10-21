@@ -161,7 +161,6 @@ wait_vblank2:
     BCC @loop
 
     ;new graphical updating stuff goes here
-    ;JSR update_dice
 
     ;write current scroll and control settings to PPU
     LDA #0
@@ -667,6 +666,8 @@ loop:
         RTS
     :
 
+    jsr ppu_off
+
     LDA #%00000001
     BIT diceupdate                  ;check for an update to die 1
     BEQ @checkdie2
@@ -748,7 +749,7 @@ loop:
 @donecheckingdice:
     ; LDA #0
     ; STA diceupdate          ;reset diceupdate to 
-
+    JSR ppu_update
     RTS
 .endproc
 
