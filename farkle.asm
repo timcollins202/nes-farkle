@@ -51,7 +51,6 @@ update:             .res 1  ;each bit denotes something needs to update:
                             ;0 = score, 1 = highscore
 dicerolls:          .res 6  ;outcomes of dice rolls, one die per byte
 diceupdate:         .res 1  ;bits 0-5 denote a die that needs to be redrawn.
-dicevblankcount:    .res 1  ;tracks how many updates we have done this vblank.
 
 
 .segment "OAM"
@@ -340,7 +339,9 @@ rollloop:
     CPY #6
     BNE rollloop
 
-    JSR draw_rolled_dice
+    ;update all 6 dice on screen
+    LDA #%00111111
+    STA diceupdate
 
     JSR ppu_update  ;wait til screen has been drawn
     
@@ -537,45 +538,6 @@ skip:
 
 
 ;*****************************************************************
-; Draw rolled dice to the screen
-;*****************************************************************
-.segment "CODE"
-.proc draw_rolled_dice
-    LDY dicerolls
-    assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 1)
-    JSR draw_die
-
-    LDY dicerolls + 1
-    assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 6)
-    JSR draw_die
-
-    LDY dicerolls + 2
-    assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 11)
-    JSR draw_die
-
-    LDY dicerolls + 3
-    assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 16)
-    JSR draw_die
-
-    LDY dicerolls + 4
-    assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 21)
-    JSR draw_die
-
-    LDY dicerolls + 5
-    assign_16i paddr, (NAME_TABLE_0_ADDRESS + 7 * 32 + 26)
-    JSR draw_die
-    
-    RTS
-.endproc
-
-;*****************************************************************
-; Check whether we have done 2 dice updates this vblank
-;*****************************************************************
-; .segment "CODE"
-; .proc 
-
-
-;*****************************************************************
 ; draw_die  -- Draws a die to screen
 ;   Inputs: paddr = VRAM address pointer
 ;           Y = number to put on die
@@ -640,8 +602,6 @@ loop:
     CMP #4          ;run this for 4 rows
     STA temp + 8
     BNE loop
-
-    INC dicevblankcount
     
     RTS
 .endproc
@@ -656,15 +616,7 @@ loop:
     CMP diceupdate
     BNE :+                          ;GTFO if diceupdate = 0
         RTS
-    :    
-
-    ;dicevblankcount > 2 means we have updated 2 dice this vblank. That's the limit!
-@checkdicevblankcount:
-    LDA #2            
-    CMP dicevblankcount
-    BNE :+
-        RTS
-    :
+    : 
 
     jsr ppu_off
 
@@ -679,9 +631,8 @@ loop:
         EOR diceupdate
         STA diceupdate
         JSR ppu_update
-        JMP @checkdicevblankcount
 @checkdie2:
-    LDA #%00000010          
+    LDA #%00000010
     BIT diceupdate              ;check for an update to die 2
     BEQ @checkdie3
         LDY dicerolls + 1
@@ -692,7 +643,6 @@ loop:
         EOR diceupdate
         STA diceupdate
         JSR ppu_update
-        JMP @checkdicevblankcount
 @checkdie3:
     LDA #%00000100          
     BIT diceupdate              ;check for an update to die 3
@@ -705,7 +655,6 @@ loop:
         EOR diceupdate
         STA diceupdate
         JSR ppu_update
-        JMP @checkdicevblankcount
 @checkdie4:
     LDA #%00001000
     BIT diceupdate              ;check for an update to die 4
@@ -718,7 +667,6 @@ loop:
         EOR diceupdate
         STA diceupdate
         JSR ppu_update
-        JMP @checkdicevblankcount
 @checkdie5:
     LDA #%00010000
     BIT diceupdate              ;check for an update to die 5
@@ -731,7 +679,6 @@ loop:
         EOR diceupdate
         STA diceupdate
         JSR ppu_update
-        JMP @checkdicevblankcount
 @checkdie6:
     LDA #%00100000
     BIT diceupdate          ;check for an update to die 5
@@ -744,7 +691,6 @@ loop:
         EOR diceupdate
         STA diceupdate
         JSR ppu_update
-        JMP @checkdicevblankcount
 
 @donecheckingdice:
     JSR ppu_update
