@@ -63,7 +63,7 @@ palette: .res 32        ;current palette buffer
 ; Include external files
 ;*****************************************************************
 .include "neslib.asm"         ;General Purpose NES Library
-.include "constants.inc"    ;Game-specific constants
+.include "constants.inc"      ;Game-specific constants
 
 
 ;*****************************************************************
@@ -207,21 +207,19 @@ paletteloop:
     STA palette, x 
     INX
     CPX #32
-    BCC paletteloop
-
-    ;initialize diceupdate to 0
-    LDA #0
-    STA diceupdate
-
-    JSR display_title_screen
-
+    BCC paletteloop    
+    
     ;set our game settings
     LDA #VBLANK_NMI|BG_0000|OBJ_1000
     STA ppu_ctl0
     LDA #BG_ON|OBJ_ON
     STA ppu_ctl1
 
-    JSR ppu_update
+    ;initialize diceupdate to 0
+    LDA #0
+    STA diceupdate
+
+    JSR display_title_screen
 
 titleloop:
     JSR gamepad_poll
@@ -611,13 +609,6 @@ loop:
 ;*****************************************************************
 .segment "CODE"
 .proc update_dice
-    ;check diceupdates to see if we need to redraw any dice
-    LDA #0
-    CMP diceupdate
-    BNE :+                          ;GTFO if diceupdate = 0
-        RTS
-    : 
-
     jsr ppu_off
 
     LDA #%00000001
@@ -693,7 +684,6 @@ loop:
         JSR ppu_update
 
 @donecheckingdice:
-    JSR ppu_update
     RTS
 .endproc
 
@@ -703,7 +693,7 @@ default_palette:
     ;background
     .byte $0f,$00,$10,$30   
     .byte $0f,$11,$21,$32
-    .byte $0f,$05,$16,$27
+    .byte $0f,$05,$26,$30
     .byte $0f,$0b,$1a,$29
 
     ;sprites
