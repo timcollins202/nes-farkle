@@ -30,13 +30,13 @@ INES_SRAM   = 0 ; 1 = battery backed SRAM at $6000-7FFF
 ; Include external files
 ;*****************************************************************
 .include "lib/neslib.asm"           ;General Purpose NES Library
-.include "lib/constants.inc"        ;Game-specific constants
+.include "src/constants.inc"        ;Game-specific constants
 .include "src/gameplay.asm"         ;Gameplay logic
 .include "src/graphics.asm"         ;Graphics drawing routines
 .include "src/nmi.asm"              ;Non-maskable interrupt handler
 .include "src/player_actions.asm"   ;Player action handler
 .include "src/reset.asm"            ;Reset handler
-.include "src/rodata.asm"           ;Read-only data
+.include "src/ro_data.asm"           ;Read-only data
 
 
 ;*****************************************************************
@@ -152,7 +152,3 @@ mainloop:
 
     JMP mainloop
 .endproc
-
-
-
-

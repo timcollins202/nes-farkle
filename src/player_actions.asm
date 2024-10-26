@@ -16,7 +16,7 @@
         LDA SELECTOR_1_XPOS         ;get X position of top left selector sprite
         CMP #217                    ;can't go any farther right than this
         BEQ not_pressing_right
-        ;we are not on right edge.  Move selector to the next die to the right
+            ;we are not on right edge.  Move selector to the next die to the right
             CLC
             ADC #40
             STA SELECTOR_1_XPOS     ;move top left sprite
@@ -41,7 +41,7 @@ not_pressing_right:
         LDA SELECTOR_1_XPOS
         CMP #17                    ;starting X pos is 24 for top right sprite
         BEQ not_pressing_left
-        ;we are not on left edge.  Move selector the next die to the left
+            ;we are not on left edge.  Move selector the next die to the left
             SEC
             SBC #40
             STA SELECTOR_1_XPOS

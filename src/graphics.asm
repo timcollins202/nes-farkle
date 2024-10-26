@@ -160,6 +160,7 @@ rollloop:
         LDX #80
     :
 gotnumber:          ;at this point we don't need Y anymore
+;THIS is where we start adding the code to move pip sprites into position
 
     ;we have starting index in X.  
     LDA #0
@@ -187,6 +188,7 @@ loop:
     
     RTS
 .endproc
+
 
 ;*****************************************************************
 ; update_dice: Updates dice tiles during vblank
