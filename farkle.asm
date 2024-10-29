@@ -36,7 +36,7 @@ INES_SRAM   = 0 ; 1 = battery backed SRAM at $6000-7FFF
 .include "src/nmi.asm"              ;Non-maskable interrupt handler
 .include "src/player_actions.asm"   ;Player action handler
 .include "src/reset.asm"            ;Reset handler
-.include "src/ro_data.asm"           ;Read-only data
+.include "src/ro_data.asm"          ;Read-only data
 
 
 ;*****************************************************************

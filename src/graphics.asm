@@ -54,24 +54,72 @@ score_text:
     JSR ppu_off
     JSR clear_nametable
 
-    ;write score at top of screen
-    vram_set_address (NAME_TABLE_0_ADDRESS + 2 * 32 + 9)
-    assign_16i text_address, score_text
-    JSR write_text
+    ; ;write score at top of screen
+    ; vram_set_address (NAME_TABLE_0_ADDRESS + 2 * 32 + 9)
+    ; assign_16i text_address, score_text
+    ; JSR write_text
 
-    ;make fake dicerolls for starting dice
-    LDY #0      ;iterator
-    LDX #1      ;value to put into dicerolls
-rollloop:
-    STX dicerolls, y
-    INX
+    vram_set_address (NAME_TABLE_0_ADDRESS)
+
+    ;draw 2 rows of bg filler tile
+    JSR draw_bg_filler_row
+    JSR draw_bg_filler_row
+
+    ;draw upper chunk of playfield tiles
+    LDY #0          ;iterator
+loop1:
+    LDA playfield_upper_1, y
+    STA PPU_DATA
     INY
-    CPY #6
-    BNE rollloop
+    CPY #255         ;32 tiles in a row
+    BNE loop1
+    STA PPU_DATA     ;get that last tile in there
 
-    ;update all 6 dice on screen
-    LDA #%00111111
-    STA diceupdate
+    ;reset iterator and draw second chunk
+    INY             ;roll over
+loop2:
+    LDA playfield_upper_2, y
+    STA PPU_DATA
+    INY
+    CPY #64
+    BNE loop2
+
+    ;draw 2 rows of bg filler tile
+    JSR draw_bg_filler_row
+    JSR draw_bg_filler_row
+
+    ;draw lower text box
+    JSR draw_lower_text_box
+    
+    ;draw 2 rows of bg filler tile
+    JSR draw_bg_filler_row
+    JSR draw_bg_filler_row
+
+    ;load attribute table
+    vram_set_address (ATTRIBUTE_TABLE_0_ADDRESS)
+    LDY #0      ;iterator
+loop3:
+    LDA playfield_attr, y 
+    STA PPU_DATA
+    INY
+    CPY #64
+    BNE loop3
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;     ;make fake dicerolls for starting dice
+;     LDY #0      ;iterator
+;     LDX #1      ;value to put into dicerolls
+; rollloop:
+;     STX dicerolls, y
+;     INX
+;     INY
+;     CPY #6
+;     BNE rollloop
+
+;     ;update all 6 dice on screen
+;     LDA #%00111111
+;     STA diceupdate
 
     JSR ppu_update  ;wait til screen has been drawn
     
@@ -118,6 +166,98 @@ rollloop:
     RTS
 .endproc
 
+;*****************************************************************
+; draw_bg_filler_row  -- Draws a row of background filler tiles
+;   Inputs: Set VRAM address before calling this subroutine
+;*****************************************************************
+.segment "CODE"
+.proc draw_bg_filler_row    
+    LDA #$04        ;background filler tile
+    LDY #0          ;iterator
+loop:
+    STA PPU_DATA
+    INY
+    CPY #32         ;32 tiles in a row
+    BNE loop
+
+    RTS
+.endproc
+
+;*****************************************************************
+; draw_lower_text_box  -- Draws the empty lower text box
+;   Inputs: Set VRAM address before calling this subroutine
+;*****************************************************************
+.segment "CODE"
+.proc draw_lower_text_box
+    LDX #0          ;big iterator
+    LDY #0          ;small iterator
+
+    LDA #$04
+    STA PPU_DATA
+    STA PPU_DATA
+    LDA #$05
+    STA PPU_DATA
+upper_line:
+    LDA #$06
+    STA PPU_DATA
+    INY
+    CPY #26         ;26 horiz line tiles form top of box
+    BNE upper_line
+    LDA #$07
+    STA PPU_DATA
+    LDA #$04
+    STA PPU_DATA
+    STA PPU_DATA
+
+    ;draw middle rows
+    LDY #0          ;reset Y, top row is done
+draw_row:
+    CPX #12
+    BEQ row_done
+    LDA #$04
+    STA PPU_DATA
+    STA PPU_DATA
+    LDA #$0a        ;vertical line tile
+    STA PPU_DATA
+    LDA #0          ;blank tile
+blank_space:
+    STA PPU_DATA
+    INY
+    CPY #26
+    BNE blank_space
+    LDY #0 ;right here
+    LDA #$0a        ;vertical line tile
+    STA PPU_DATA
+    LDA #$04        ;bg filler tile
+    STA PPU_DATA
+    STA PPU_DATA
+    INX     
+    CPX #12
+    BNE draw_row
+row_done:
+
+    LDA #$04
+    STA PPU_DATA
+    STA PPU_DATA
+    LDA #$08        ;bottom left corner
+    STA PPU_DATA
+    LDX #0          ;reset iterators
+    LDY #0
+    LDA #$06        ;horiz line tile
+lower_line:
+    STA PPU_DATA
+    INY 
+    CPY #26
+    BNE lower_line
+    LDA #$09        ;bottom right corner
+    STA PPU_DATA
+    LDA #$04        ;background filler tile
+    STA PPU_DATA
+    STA PPU_DATA
+
+    RTS
+.endproc
+
 
 ;*****************************************************************
 ; draw_die  -- Draws a die to screen
@@ -160,7 +300,7 @@ rollloop:
         LDX #80
     :
 gotnumber:          ;at this point we don't need Y anymore
-;THIS is where we start adding the code to move pip sprites into position
+;THIS is where we start adding the code to move pip sprites into position***************
 
     ;we have starting index in X.  
     LDA #0
