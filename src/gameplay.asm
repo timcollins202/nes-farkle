@@ -66,3 +66,30 @@ skip:
 
     RTS
 .endproc
+
+
+;*****************************************************************
+; New Update Dice
+;*****************************************************************
+
+;diceupdate will use bits 0-5 to store which dice have been kept
+;when player selects a die to keep, flip corresponding bit in diceupdate to 1
+;add corresponding value from dicerolls to keptdice array
+
+;New update_dice will check whether diceupdate is 0
+;if so, exit
+;using X as iterator
+;loop:
+;check if diceupdate[0] is 1
+;   if not, ROR diceupdate
+;       INX
+;       BNE loop
+;   if so, call draw_die using x as index into a jump table
+;       which points to 6 routines to draw pips in 1-6 arrangements 
+;           each routine checks dicerolls, X to
+
+;we track which die we update by the loop iterator, X
+;   call draw_die on X=0.  see dicerolls[0] = 3.
+;   set starting sprite locations for die 0
+;   call routine that draws 3 pips.
+

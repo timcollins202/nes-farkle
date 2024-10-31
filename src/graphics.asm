@@ -54,11 +54,6 @@ score_text:
     JSR ppu_off
     JSR clear_nametable
 
-    ; ;write score at top of screen
-    ; vram_set_address (NAME_TABLE_0_ADDRESS + 2 * 32 + 9)
-    ; assign_16i text_address, score_text
-    ; JSR write_text
-
     vram_set_address (NAME_TABLE_0_ADDRESS)
 
     ;draw 2 rows of bg filler tile
@@ -134,10 +129,10 @@ loop3:
 .proc draw_selector
     ;display the player's selctor on the leftmost die
     ;set Y position of all 4 parts of the selector (byte 0)
-    LDA #49                 ;Y position of 24 for top 2
+    LDA #18                 ;Y position of 24 for top 2  was 49
     STA SELECTOR_1_YPOS
     STA SELECTOR_2_YPOS     
-    LDA #85                 ;Y position of 32 for bottom 2
+    LDA #51                 ;Y position of 32 for bottom 2
     STA SELECTOR_3_YPOS
     STA SELECTOR_4_YPOS
     ;set the tile number used by the sprite (byte 1)
@@ -156,10 +151,10 @@ loop3:
     LDA #SPRITE_FLIP_HORIZ|SPRITE_FLIP_VERT|SPRITE_PALETTE_1
     STA SELECTOR_4_ATTR
     ;set the X position for all 4 parts of the selector (byte 3)
-    LDA #17
+    LDA #31
     STA SELECTOR_1_XPOS
     STA SELECTOR_3_XPOS
-    LDA #25
+    LDA #39
     STA SELECTOR_2_XPOS
     STA SELECTOR_4_XPOS
 
@@ -225,7 +220,7 @@ blank_space:
     INY
     CPY #26
     BNE blank_space
-    LDY #0 ;right here
+    LDY #0          ;reset Y
     LDA #$0a        ;vertical line tile
     STA PPU_DATA
     LDA #$04        ;bg filler tile
