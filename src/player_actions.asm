@@ -14,24 +14,10 @@
     BEQ not_pressing_right
         ;we are pressing right. Make sure we aren't already on right edge
         LDA SELECTOR_1_XPOS         ;get X position of top left selector sprite
-        CMP #217                    ;can't go any farther right than this
+        CMP #111                    ;can't go any farther right than this
         BEQ not_pressing_right
             ;we are not on right edge.  Move selector to the next die to the right
-            CLC
-            ADC #40
-            STA SELECTOR_1_XPOS     ;move top left sprite
-            LDA SELECTOR_2_XPOS     ;get top right sprite's X position
-            CLC
-            ADC #40
-            STA SELECTOR_2_XPOS    ;move top right sprite
-            LDA SELECTOR_3_XPOS    ;get bottom left sprite's X position
-            CLC 
-            ADC #40
-            STA SELECTOR_3_XPOS    ;move bottom left sprite
-            LDA SELECTOR_4_XPOS    ;get bottom right sprite's X position
-            CLC 
-            ADC #40
-            STA SELECTOR_4_XPOS    ;move bottom right sprite
+            JSR move_selector_right
 
 not_pressing_right:
     LDA gamepad
@@ -39,24 +25,10 @@ not_pressing_right:
     BEQ not_pressing_left
         ;we are pressing left.  Make sure we aren't already at left edge.
         LDA SELECTOR_1_XPOS
-        CMP #17                    ;starting X pos is 24 for top right sprite
+        CMP #31                    ;starting X pos is 24 for top right sprite
         BEQ not_pressing_left
             ;we are not on left edge.  Move selector the next die to the left
-            SEC
-            SBC #40
-            STA SELECTOR_1_XPOS
-            LDA SELECTOR_2_XPOS
-            SEC
-            SBC #40
-            STA SELECTOR_2_XPOS
-            LDA SELECTOR_3_XPOS
-            SEC
-            SBC #40
-            STA SELECTOR_3_XPOS
-            LDA SELECTOR_4_XPOS
-            SEC
-            SBC #40
-            STA SELECTOR_4_XPOS
+            JSR move_selector_left
 
 not_pressing_left:
     LDA gamepad
@@ -71,6 +43,46 @@ not_pressing_left:
             LDA #%00111111
             STA diceupdate
 not_pressing_start:
+
+    RTS
+.endproc
+
+.proc move_selector_right
+    CLC
+    ADC #40
+    STA SELECTOR_1_XPOS     ;move top left sprite
+    LDA SELECTOR_2_XPOS     ;get top right sprite's X position
+    CLC
+    ADC #40
+    STA SELECTOR_2_XPOS    ;move top right sprite
+    LDA SELECTOR_3_XPOS    ;get bottom left sprite's X position
+    CLC 
+    ADC #40
+    STA SELECTOR_3_XPOS    ;move bottom left sprite
+    LDA SELECTOR_4_XPOS    ;get bottom right sprite's X position
+    CLC 
+    ADC #40
+    STA SELECTOR_4_XPOS    ;move bottom right sprite
+
+    RTS
+.endproc
+
+.proc move_selector_left
+    SEC
+    SBC #40
+    STA SELECTOR_1_XPOS
+    LDA SELECTOR_2_XPOS
+    SEC
+    SBC #40
+    STA SELECTOR_2_XPOS
+    LDA SELECTOR_3_XPOS
+    SEC
+    SBC #40
+    STA SELECTOR_3_XPOS
+    LDA SELECTOR_4_XPOS
+    SEC
+    SBC #40
+    STA SELECTOR_4_XPOS
 
     RTS
 .endproc
