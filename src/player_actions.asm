@@ -32,6 +32,28 @@ not_pressing_right:
 
 not_pressing_left:
     LDA gamepad
+    AND #PAD_D
+    BEQ not_pressing_down
+        ;we are pressing down.  Make sure we're not already on bottom row.
+        LDA SELECTOR_1_YPOS
+        CMP #50
+        BEQ not_pressing_down
+            ;we are pressing down. Move selector down.
+            JSR move_selector_down
+
+not_pressing_down:
+    LDA gamepad 
+    AND #PAD_U
+    BEQ not_pressing_up
+        ;we are pressing up.  Make sure we're not already on top row.
+        LDA SELECTOR_1_YPOS
+        CMP #18
+        BEQ not_pressing_up 
+            ;we are not on top row.  Move selector to top row.
+            JSR move_selector_up
+
+not_pressing_up:
+    LDA gamepad
     AND #PAD_START
     BEQ not_pressing_start
         ;we are pressing start.  See if we are pre-roll
@@ -83,6 +105,47 @@ not_pressing_start:
     SEC
     SBC #40
     STA SELECTOR_4_XPOS
+
+    RTS
+.endproc
+
+.proc move_selector_down
+    CLC
+    ADC #32
+    STA SELECTOR_1_YPOS 
+    LDA SELECTOR_2_YPOS
+    CLC
+    ADC #32
+    STA SELECTOR_2_YPOS
+    LDA SELECTOR_3_YPOS
+    CLC 
+    ADC #32
+    STA SELECTOR_3_YPOS
+    LDA SELECTOR_4_YPOS
+    CLC 
+    ADC #32
+    STA SELECTOR_4_YPOS    
+
+    RTS
+.endproc
+
+.proc move_selector_up
+    ;figure out the bottorm row pixel positions first
+    SEC
+    SBC #32
+    STA SELECTOR_1_YPOS
+    LDA SELECTOR_2_YPOS
+    SEC
+    SBC #32
+    STA SELECTOR_2_YPOS
+    LDA SELECTOR_3_YPOS
+    SEC
+    SBC #32
+    STA SELECTOR_3_YPOS
+    LDA SELECTOR_4_YPOS
+    SEC
+    SBC #32
+    STA SELECTOR_4_YPOS
 
     RTS
 .endproc
