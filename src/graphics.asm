@@ -47,9 +47,6 @@ loop:
 ; Display Main Game Screen
 ;*****************************************************************
 .segment "CODE"
-score_text:
-    .byte "SCORE 0000000",0
-
 .proc display_game_screen
     JSR ppu_off
     JSR clear_nametable
@@ -326,11 +323,48 @@ loop:
 
 
 ;*****************************************************************
-; update_dice: Updates dice tiles during vblank
+; update_dice: Updates dice pip sprites based on bits set in diceupdate
 ;*****************************************************************
 .segment "CODE"
 .proc update_dice
-    jsr ppu_off
+    LDY #0              ;iterator
+    LDA diceupdate
+loop1:
+    BIT #$01            ;is diceupdate[0] a 1?
+    BEQ update_pips     ;if so, we will draw the value at dicerolls, y on die number y
+shift_a:
+    ROR A               ;if not, rotate diceupdate and check the next byte
+    INY
+    CPY #6              ;do this 6 times for 6 dice
+    BEQ done
+    JMP loop1
+
+update_pips:
+    JSR draw_pips
+    JMP shift_a
+    
+done:
+    RTS
+.endproc
+
+
+;*****************************************************************
+; draw_pips:  Place pip sprites on dice
+;   Inputs: Y serves both as index into dicerolls to get what number to draw
+;               and to denote which die to update
+;*****************************************************************
+.segment "CODE"
+.proc draw_pips
+    
+.endproc
+
+;*****************************************************************
+; OLD
+; update_dice: Updates dice tiles during vblank
+;*****************************************************************
+.segment "CODE"
+.proc update_dice_OLD
+    JSR ppu_off
 
     LDA #%00000001
     BIT diceupdate                  ;check for an update to die 1

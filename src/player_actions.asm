@@ -1,23 +1,23 @@
 ;*****************************************************************
 ; Handle player actions
-;   -move selector
 ;*****************************************************************
 .segment "CODE"
 .proc player_actions
-    JSR gamepad_poll
+    JSR gamepad_poll                ;read button state
     LDA gamepad
     CMP gamepad_last                ;make sure button state has changed
     BNE :+
         RTS                         ;if not, GTFO
-    :                       
-    AND #PAD_R
+    :
+
+AND #PAD_R
+BEQ not_pressing_right
+    ;we are pressing right. Make sure we aren't already on right edge
+    LDA SELECTOR_1_XPOS         ;get X position of top left selector sprite
+    CMP #111                    ;can't go any farther right than this
     BEQ not_pressing_right
-        ;we are pressing right. Make sure we aren't already on right edge
-        LDA SELECTOR_1_XPOS         ;get X position of top left selector sprite
-        CMP #111                    ;can't go any farther right than this
-        BEQ not_pressing_right
-            ;we are not on right edge.  Move selector to the next die to the right
-            JSR move_selector_right
+        ;we are not on right edge.  Move selector to the next die to the right
+        JSR move_selector_right
 
 not_pressing_right:
     LDA gamepad
@@ -54,17 +54,21 @@ not_pressing_down:
 
 not_pressing_up:
     LDA gamepad
-    AND #PAD_START
-    BEQ not_pressing_start
+    AND #PAD_A
+    BEQ not_pressing_a
         ;we are pressing start.  See if we are pre-roll
         LDA gamestate
         CMP #0
-        BNE not_pressing_start
+        BNE not_pressing_a
             ;we are pressing start pre-roll.  Roll em!
+            ;update gamestate
+            LDA #1                  ;gamestate 1 = rolling dice
+            STA gamestate
+
             JSR roll_dice
             LDA #%00111111
             STA diceupdate
-not_pressing_start:
+not_pressing_a:
 
     RTS
 .endproc

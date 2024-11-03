@@ -107,6 +107,10 @@ paletteloop:
     LDA #0
     STA diceupdate
 
+    ;set gamestate to 0 = title screen
+    LDA #0
+    STA gamestate
+
     JSR display_title_screen
 
 titleloop:
@@ -128,8 +132,8 @@ titleloop:
     STA SEED2+1
 
     ;setup stuff before mainloop goes here
-    ;set gamestate to 0 = pre-roll
-    LDA #0
+    ;set gamestate to 1 = pre-roll
+    LDA #1
     STA gamestate
 
     JSR display_game_screen

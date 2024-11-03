@@ -7,7 +7,7 @@ default_palette:
     .byte $0f,$0b,$1a,$29
 
     ;sprites
-    .byte $0F,$05,$15,$17   
+    .byte $0F,$05,$15,$0F   
     .byte $0F,$14,$24,$34
     .byte $0F,$1B,$2B,$3B
     .byte $0F,$12,$22,$32

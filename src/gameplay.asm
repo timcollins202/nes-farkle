@@ -3,9 +3,6 @@
 ;*****************************************************************
 .segment "CODE"
 .proc roll_dice
-    ;update gamestate
-    LDA #1                  ;gamestate bit 1 = rolling dice
-    STA gamestate
 
     ;generate random numbers
     JSR rand            ;get next random 16 bits in A and Y
