@@ -392,12 +392,9 @@ done:
     LDA pip_jump_table + 1, x 
     STA paddr+1
     JMP (paddr)
-
-
 .endproc
 
-draw_pips_one:
-    ;find an offscreen pip sprite
+find_available_pip_sprite:
     LDX #184        ;shadow oam byte for Ypos of the last pip sprite, +4 so we can subtract in loop
 @loop:
     TXA
@@ -407,7 +404,12 @@ draw_pips_one:
     LDA oam, x 
     CMP #255        ;if the Ypos != 255, sprite is not in use
     BNE @loop
-    ;we have the correct oam offset for the first free pip sprite
+    RTS
+
+draw_pips_one:
+    ;find an offscreen pip sprite
+    JSR find_available_pip_sprite
+    ;we have the correct oam offset for the first free pip sprite in A
     LDA temp + 5    ;starting Ypos for the die
     CLC
     ADC #8          ;add 8 to Ypos
@@ -422,6 +424,7 @@ draw_pips_one:
 
     RTS
 
+draw_pips_two:
 
 
 ;*****************************************************************
