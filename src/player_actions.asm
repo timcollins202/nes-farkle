@@ -58,15 +58,18 @@ not_pressing_up:
     BEQ not_pressing_a
         ;we are pressing start.  See if we are pre-roll
         LDA gamestate
-        CMP #0
+        CMP #1
         BNE not_pressing_a
             ;we are pressing start pre-roll.  Roll em!
             ;update gamestate
             LDA #1                  ;gamestate 1 = rolling dice
             STA gamestate
 
-            JSR roll_dice
-            LDA #%00111111
+            ;testing with 1 die set to 1
+            ; JSR roll_dice
+            ; LDA #%00111111       ;set all dice to update   
+            LDA #%00000001
+            STA dicerolls
             STA diceupdate
 not_pressing_a:
 

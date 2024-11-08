@@ -261,6 +261,7 @@ lower_line:
     
     vram_set_address_i paddr
 
+    ;TODO- can this be a lookup table?
     ;figure out what number we are drawing and set X = starting index in dice_tiles
     CPY #1
     BNE :+
@@ -327,36 +328,101 @@ loop:
 ;*****************************************************************
 .segment "CODE"
 .proc update_dice
-    LDY #0              ;iterator
+    ;if diceupdate is 0, GTFO
     LDA diceupdate
-loop1:
-    BIT #$01            ;is diceupdate[0] a 1?
-    BEQ update_pips     ;if so, we will draw the value at dicerolls, y on die number y
-shift_a:
-    ROR A               ;if not, rotate diceupdate and check the next byte
+    CMP #0
+    BNE :+
+        RTS           
+    :
+
+    LDY #0              ;iterator   
+loop:
+    LDA #%00000001
+    AND diceupdate      ;is diceupdate[0] a 1?
+    BNE update_pips     ;if so, we will draw the value at dicerolls, y on die number y
+rotate:
+    LSR diceupdate      ;if not, rotate diceupdate and check the next byte
     INY
-    CPY #6              ;do this 6 times for 6 dice
+    CPY #5              ;do this 6 times for 6 dice
     BEQ done
-    JMP loop1
+    JMP loop
 
 update_pips:
+;make sure registers arent getting clobbered here
+    LDX dicerolls, y    ;put the number we will be drawing in X
+    TYA
+    PHA                 ;preserve Y on stack
     JSR draw_pips
-    JMP shift_a
+    PLA
+    TAY                 ;get Y back off the stack
+    JMP rotate
     
 done:
+    LDA #0
+    STA diceupdate      ;make sure diceupdate gets reset to 0
     RTS
 .endproc
 
 
 ;*****************************************************************
 ; draw_pips:  Place pip sprites on dice
-;   Inputs: Y serves both as index into dicerolls to get what number to draw
-;               and to denote which die to update
+;   Inputs: Y is which die we are drawing on, 0-5
+;           X is the number we are drawing
 ;*****************************************************************
 .segment "CODE"
 .proc draw_pips
-    
+     
+     ;figure out our starting positions first
+     ;then jump to the appropriate pip routine based on X
+
+     ;set temp 4 & 5 to our starting X and Y coordinates
+     ;table holds X, Y coordinates for dice 0-5
+     ;TODO - populate this table
+
+
+    LDA pip_starting_positions_x, y 
+    STA temp + 4
+    LDA pip_starting_positions_y, y 
+    STA temp + 5
+
+    ;calculate jump address and jump to it
+    DEX                         ;decrement to offset 0 indexing
+    LDA pip_jump_table, x           
+    STA paddr
+    LDA pip_jump_table + 1, x 
+    STA paddr+1
+    JMP (paddr)
+
+
 .endproc
+
+draw_pips_one:
+    ;find an offscreen pip sprite
+    LDX #184        ;shadow oam byte for Ypos of the last pip sprite, +4 so we can subtract in loop
+@loop:
+    TXA
+    SEC
+    SBC #4
+    TAX
+    LDA oam, x 
+    CMP #255        ;if the Ypos != 255, sprite is not in use
+    BNE @loop
+    ;we have the correct oam offset for the first free pip sprite
+    LDA temp + 5    ;starting Ypos for the die
+    CLC
+    ADC #8          ;add 8 to Ypos
+    STA oam, x 
+    INX
+    INX
+    INX
+    LDA temp + 4    ;starting Xpos for the die
+    CLC
+    ADC #8
+    STA oam, x 
+
+    RTS
+
+
 
 ;*****************************************************************
 ; OLD

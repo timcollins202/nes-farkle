@@ -49,3 +49,18 @@ playfield_attr:
 	.byte $11,$00,$00,$00,$44,$11,$00,$44,$15,$05,$05,$05,$05,$05,$05,$45
 	.byte $11,$00,$00,$00,$00,$00,$00,$44,$11,$00,$00,$00,$00,$00,$00,$44
 	.byte $11,$00,$00,$00,$00,$00,$00,$44,$05,$05,$05,$05,$05,$05,$05,$05
+
+pip_starting_positions_x:
+    .byte 27
+
+pip_starting_positions_y:
+    .byte 28
+
+pip_jump_table:
+    .word draw_pips_one
+    ; .word draw_pips_two
+    ; .word draw_pips_three
+    ; .word draw_pips_four
+    ; .word draw_pips_five
+    ; .word draw_pips_six
+    

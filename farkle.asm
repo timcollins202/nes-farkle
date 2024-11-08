@@ -111,6 +111,20 @@ paletteloop:
     LDA #0
     STA gamestate
 
+    ;initialize dice pip sprite tiles and attributes
+    LDX #17             ;iterator, starting index into OAM    
+piploop:
+    LDA #$03            ;pip sprite tile number
+    STA oam, x          ;tile byte of first pip sprite
+    INX
+    LDA #SPRITE_PALETTE_0
+    STA oam, x 
+    INX
+    INX
+    INX                 ;add 3 to X, gets us to the next sprite's tile byte
+    CPX #185            
+    BNE piploop
+
     JSR display_title_screen
 
 titleloop:
@@ -146,12 +160,7 @@ mainloop:
     STA lasttime        ;time has changed, so update lasttime
 
     ;loop calls go here
-    JSR player_actions
-
-    ;if diceupdate != 0, update dice tiles
-    LDA diceupdate
-    CMP #0
-    BEQ mainloop
+    JSR player_actions   
     JSR update_dice
 
     JMP mainloop
