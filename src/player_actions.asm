@@ -68,8 +68,14 @@ not_pressing_up:
             ;testing with 1 die set to 1
             ; JSR roll_dice
             ; LDA #%00111111       ;set all dice to update   
-            LDA #%00000001
+            LDA #1
             STA dicerolls
+            STA dicerolls + 1
+            STA dicerolls + 2
+            STA dicerolls + 3
+            STA dicerolls + 4
+            STA dicerolls + 5
+            LDA #%00111111
             STA diceupdate
 not_pressing_a:
 

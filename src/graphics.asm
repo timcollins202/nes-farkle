@@ -97,22 +97,6 @@ loop3:
     CPY #64
     BNE loop3
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;     ;make fake dicerolls for starting dice
-;     LDY #0      ;iterator
-;     LDX #1      ;value to put into dicerolls
-; rollloop:
-;     STX dicerolls, y
-;     INX
-;     INY
-;     CPY #6
-;     BNE rollloop
-
-;     ;update all 6 dice on screen
-;     LDA #%00111111
-;     STA diceupdate
-
     JSR ppu_update  ;wait til screen has been drawn
     
     RTS
@@ -343,7 +327,7 @@ loop:
 rotate:
     LSR diceupdate      ;if not, rotate diceupdate and check the next byte
     INY
-    CPY #5              ;do this 6 times for 6 dice
+    CPY #6              ;do this 6 times for 6 dice
     BEQ done
     JMP loop
 
@@ -371,19 +355,15 @@ done:
 ;*****************************************************************
 .segment "CODE"
 .proc draw_pips
-     
-     ;figure out our starting positions first
-     ;then jump to the appropriate pip routine based on X
-
-     ;set temp 4 & 5 to our starting X and Y coordinates
-     ;table holds X, Y coordinates for dice 0-5
-     ;TODO - populate this table
-
-
+    ;set temp 4 & 5 to our starting X and Y coordinates
+    ;then jump to the appropriate pip routine based on X
     LDA pip_starting_positions_x, y 
     STA temp + 4
     LDA pip_starting_positions_y, y 
     STA temp + 5
+
+    ;clear out the die we are about to draw to    
+    JSR clear_die    
 
     ;calculate jump address and jump to it
     DEX                         ;decrement to offset 0 indexing
@@ -393,6 +373,69 @@ done:
     STA paddr+1
     JMP (paddr)
 .endproc
+
+clear_die:
+    TXA
+    PHA             ;preserve x on the stack
+
+    ;use temp + 7 as iterator
+    LDA #0
+    STA temp + 7
+
+    ;loop over sprites and remove any inside this die's boundaries
+    LDX #184    ;shadow oam byte for Ypos of the last pip sprite, +4 so we can subtract in loop
+@loop:
+    TXA
+    SEC
+    SBC #4
+    TAX
+    LDA oam, x 
+    CMP bottom_boundaries_ypos, y  ;is the sprite above the bottom of the die?
+    BCC @bottom_hit
+        JMP @continue  
+@bottom_hit:
+    ;the sprite is over the bottom of the die.  Check if its below the top
+    CMP top_boundaries_ypos, y 
+    BCS @top_hit
+        JMP @continue
+@top_hit:
+    ;the sprite is on the correct row.  Check if its left of the right side
+    INX
+    INX
+    INX                         ;get X up to the Xpos of the sprite
+    LDA oam, x 
+    CMP right_boundaries_xpos, y  
+    BCC @right_hit  
+        DEX
+        DEX
+        DEX            ;get back to the Ypos so we don't break the subtraction above
+        JMP @continue
+@right_hit:
+    ;it could also be in a die to the left. Check if its right of the left side
+    CMP left_boundaries_xpos, y 
+    BCS @remove_sprite
+        DEX
+        DEX
+        DEX
+        JMP @continue
+@remove_sprite:
+    ;You are on our die, sir! Begone! 
+    DEX
+    DEX
+    DEX 
+    LDA #255
+    STA oam, x 
+@continue:
+    LDA temp + 7    ;increment iterator
+    CLC
+    ADC #1
+    STA temp + 7
+    CMP #42         ;do this 42 times
+    BNE @loop
+@done:
+    PLA             ;put x back from stack
+    TAX
+    RTS
 
 find_available_pip_sprite:
     LDX #184        ;shadow oam byte for Ypos of the last pip sprite, +4 so we can subtract in loop
@@ -404,12 +447,12 @@ find_available_pip_sprite:
     LDA oam, x 
     CMP #255        ;if the Ypos != 255, sprite is not in use
     BNE @loop
-    RTS
+    RTS             ;this puts the oam offset for the first free pip's Ypos in X
 
 draw_pips_one:
     ;find an offscreen pip sprite
     JSR find_available_pip_sprite
-    ;we have the correct oam offset for the first free pip sprite in A
+    ;we have the correct oam offset for the first free pip sprite in X
     LDA temp + 5    ;starting Ypos for the die
     CLC
     ADC #8          ;add 8 to Ypos
@@ -421,11 +464,16 @@ draw_pips_one:
     CLC
     ADC #8
     STA oam, x 
-
     RTS
 
 draw_pips_two:
+    JSR find_available_pip_sprite
+    LDX temp + 5     ;starting Ypos
+    INX
+    INX
+    STX oam
 
+    
 
 ;*****************************************************************
 ; OLD
