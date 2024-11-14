@@ -70,6 +70,7 @@ not_pressing_up:
             ; LDA #%00111111       ;set all dice to update   
             LDA #1
             STA dicerolls
+            LDA #2
             STA dicerolls + 1
             STA dicerolls + 2
             STA dicerolls + 3

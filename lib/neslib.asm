@@ -359,3 +359,22 @@ try10:
     ;A = decmial ones
     RTS
 .endproc
+
+;*****************************************************************
+; find_available_sprite: Check whether two objects have hit each other
+; Returns: X = OAM index of the first offscreen sprite's Ypos
+;*****************************************************************
+.segment "CODE"
+.proc find_available_sprite:
+    LDX #184        ;shadow oam byte for Ypos of the last pip sprite, +4 so we can subtract in loop
+@loop:
+    TXA
+    SEC
+    SBC #4
+    TAX
+    LDA oam, x 
+    CMP #255        ;if the Ypos != 255, sprite is not in use
+    BNE @loop
+
+    RTS             ;this puts the oam offset for the first free pip's Ypos in X
+.endproc

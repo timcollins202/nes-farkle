@@ -366,7 +366,9 @@ done:
     JSR clear_die    
 
     ;calculate jump address and jump to it
-    DEX                         ;decrement to offset 0 indexing
+    TXA
+    ASL 
+    TAX                         ;shift X so we get an even index
     LDA pip_jump_table, x           
     STA paddr
     LDA pip_jump_table + 1, x 
@@ -461,18 +463,33 @@ draw_pips_one:
     INX
     INX
     LDA temp + 4    ;starting Xpos for the die
-    CLC
     ADC #8
     STA oam, x 
     RTS
 
 draw_pips_two:
     JSR find_available_pip_sprite
-    LDX temp + 5     ;starting Ypos
+    LDA temp + 5     ;starting Ypos
+    CLC
+    ADC #2
+    STA oam, x
     INX
     INX
-    STX oam
-
+    INX
+    LDA temp + 4    ;starting Xpos
+    ADC #2
+    STA oam, x      ;first pip is placed, let's do the second
+    JSR find_available_pip_sprite 
+    LDA temp + 5    ;starting Ypos
+    ADC #24
+    STA oam, x
+    INX
+    INX
+    INX
+    LDA temp + 4    ;starting Xpos
+    ADC #24
+    STA oam, X
+    RTS
     
 
 ;*****************************************************************
